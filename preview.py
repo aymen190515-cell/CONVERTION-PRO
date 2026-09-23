@@ -1536,6 +1536,242 @@ footer{
     }
 }
 
+
+/* SYSTEM DIAGNOSTICS */
+
+.diag-summary{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    padding:18px 20px;
+    margin-bottom:16px;
+}
+
+.diag-summary-left{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.diag-mode{
+    display:inline-flex;
+    align-items:center;
+    min-height:26px;
+    padding:0 10px;
+    border:1px solid #735a22;
+    border-radius:6px;
+    background:#211a0b;
+    color:#e8b84d;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.diag-physical{
+    color:#8495a7;
+    font-size:10px;
+    font-weight:700;
+}
+
+.diag-readonly{
+    padding:5px 8px;
+    border:1px solid #26384b;
+    border-radius:5px;
+    background:#0c141d;
+    color:#7f93a8;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.diag-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+    margin-bottom:16px;
+}
+
+.diag-panel{
+    padding:18px;
+}
+
+.diag-panel-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:14px;
+}
+
+.diag-panel-title span:first-child{
+    color:#71859a;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1.4px;
+}
+
+.diag-status{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:#7d8fa2;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:.8px;
+}
+
+.diag-status.pass{
+    color:#74d9af;
+}
+
+.diag-status.fail{
+    color:#ff8791;
+}
+
+.diag-row{
+    display:grid;
+    grid-template-columns:110px minmax(0,1fr);
+    gap:12px;
+    align-items:center;
+    min-height:44px;
+    border-top:1px solid #182432;
+}
+
+.diag-row:first-of-type{
+    border-top:0;
+}
+
+.diag-row small{
+    color:#60748a;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:.8px;
+}
+
+.diag-row strong,
+.diag-row code{
+    color:#d5dfe9;
+    font-size:10px;
+    line-height:1.45;
+    word-break:break-word;
+}
+
+.diag-value-pass{
+    color:#74d9af !important;
+}
+
+.diag-value-fail{
+    color:#ff8791 !important;
+}
+
+.diag-monitoring{
+    color:#8fa5ba !important;
+}
+
+.diag-log{
+    padding:18px;
+}
+
+.diag-log-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:12px;
+}
+
+.diag-log-head span:first-child{
+    color:#71859a;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1.4px;
+}
+
+.diag-log-list{
+    border:1px solid #182432;
+    border-radius:8px;
+    overflow:hidden;
+    background:#080e14;
+}
+
+.diag-event{
+    display:grid;
+    grid-template-columns:70px minmax(0,1fr);
+    gap:14px;
+    align-items:center;
+    min-height:43px;
+    padding:0 14px;
+    border-top:1px solid #182432;
+}
+
+.diag-event:first-child{
+    border-top:0;
+}
+
+.diag-event-level{
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1px;
+    color:#8295a8;
+}
+
+.diag-event.pass .diag-event-level{
+    color:#74d9af;
+}
+
+.diag-event.fail .diag-event-level{
+    color:#ff8791;
+}
+
+.diag-event-message{
+    color:#b9c6d2;
+    font-size:10px;
+}
+
+.diag-error{
+    display:none;
+    margin-bottom:14px;
+    padding:13px 15px;
+    border:1px solid #65303a;
+    border-radius:8px;
+    background:#241218;
+    color:#ff8791;
+    font-size:11px;
+}
+
+.diag-error.visible{
+    display:block;
+}
+
+.diag-loading{
+    min-height:300px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:14px;
+    text-align:center;
+}
+
+@media(max-width:900px){
+    .diag-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:600px){
+    .diag-summary{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .diag-row{
+        grid-template-columns:95px minmax(0,1fr);
+    }
+}
+
 /* RESPONSIVE */
 
 @media(max-width:800px){
@@ -2212,6 +2448,232 @@ footer{
 
 </section>
 
+
+
+
+<!-- SYSTEM DIAGNOSTICS -->
+
+<section id="diagnostics" class="screen">
+
+    <button class="back" onclick="show('advanced')">
+        ← Advanced Tools
+    </button>
+
+    <div class="heading-row">
+        <div>
+            <div class="eyebrow">
+                TECHNICIAN MODE · DIAGNOSTICS
+            </div>
+
+            <h1>System Diagnostics</h1>
+
+            <p class="subtitle">
+                Monitor programmer, connection and electrical
+                status without modifying cluster memory.
+            </p>
+        </div>
+    </div>
+
+    <div id="diagnosticsError" class="diag-error"></div>
+
+    <div
+        id="diagnosticsLoading"
+        class="card diag-loading"
+    >
+        <div class="memory-loading-ring"></div>
+
+        <div>
+            <strong>Running Diagnostics</strong>
+
+            <p class="subtitle">
+                Checking programmer, communication
+                and electrical conditions...
+            </p>
+        </div>
+    </div>
+
+    <div
+        id="diagnosticsContent"
+        style="display:none"
+    >
+
+        <div class="card diag-summary">
+
+            <div class="diag-summary-left">
+
+                <span
+                    class="diag-mode"
+                    id="diagnosticsMode"
+                >
+                    SIMULATED
+                </span>
+
+                <span class="diag-physical">
+                    Physical diagnostics:
+                    <strong id="diagnosticsPhysical">
+                        NOT ACTIVE
+                    </strong>
+                </span>
+
+            </div>
+
+            <span class="diag-readonly">
+                READ ONLY
+            </span>
+
+        </div>
+
+
+        <div class="diag-grid">
+
+            <div class="card diag-panel">
+
+                <div class="diag-panel-title">
+                    <span>PROGRAMMER</span>
+
+                    <span
+                        class="diag-status"
+                        id="diagnosticsProgrammerStatus"
+                    >
+                        WAITING
+                    </span>
+                </div>
+
+                <div class="diag-row">
+                    <small>CONNECTION</small>
+                    <strong id="diagnosticsConnected">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="diag-row">
+                    <small>MODE</small>
+                    <strong id="diagnosticsProgrammerMode">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="diag-row">
+                    <small>ACCESS</small>
+                    <strong>READ ONLY</strong>
+                </div>
+
+            </div>
+
+
+            <div class="card diag-panel">
+
+                <div class="diag-panel-title">
+                    <span>CONNECTION</span>
+
+                    <span
+                        class="diag-status"
+                        id="diagnosticsCommunicationStatus"
+                    >
+                        WAITING
+                    </span>
+                </div>
+
+                <div class="diag-row">
+                    <small>CABLE</small>
+                    <strong id="diagnosticsCable">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="diag-row">
+                    <small>CABLE MATCH</small>
+                    <strong id="diagnosticsCableMatch">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="diag-row">
+                    <small>CLUSTER</small>
+                    <code id="diagnosticsCluster">
+                        ---
+                    </code>
+                </div>
+
+                <div class="diag-row">
+                    <small>IDENTITY</small>
+                    <strong id="diagnosticsClusterMatch">
+                        ---
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <div class="card diag-panel">
+
+                <div class="diag-panel-title">
+                    <span>ELECTRICAL</span>
+
+                    <span
+                        class="diag-status"
+                        id="diagnosticsElectricalStatus"
+                    >
+                        WAITING
+                    </span>
+                </div>
+
+                <div class="diag-row">
+                    <small>VOLTAGE</small>
+                    <strong id="diagnosticsVoltage">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="diag-row">
+                    <small>EXPECTED</small>
+                    <strong id="diagnosticsVoltageRange">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="diag-row">
+                    <small>VOLTAGE STATUS</small>
+                    <strong id="diagnosticsVoltageStatus">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="diag-row">
+                    <small>CURRENT</small>
+                    <strong
+                        class="diag-monitoring"
+                        id="diagnosticsCurrent"
+                    >
+                        ---
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card diag-log">
+
+            <div class="diag-log-head">
+                <span>EVENT LOG</span>
+
+                <span class="diag-readonly">
+                    CURRENT SESSION
+                </span>
+            </div>
+
+            <div
+                class="diag-log-list"
+                id="diagnosticsEvents"
+            ></div>
+
+        </div>
+
+    </div>
+
+</section>
 
 
 <!-- CLUSTER IDENTIFICATION -->
@@ -3190,6 +3652,256 @@ document.addEventListener('click', event => {
 });
 
 
+
+function setDiagnosticStatus(
+    elementId,
+    passed,
+    passText = "PASS",
+    failText = "FAIL"
+){
+    const element = document.getElementById(elementId);
+
+    if(!element){
+        return;
+    }
+
+    element.classList.remove("pass", "fail");
+
+    if(passed){
+        element.classList.add("pass");
+        element.textContent = passText;
+    }else{
+        element.classList.add("fail");
+        element.textContent = failText;
+    }
+}
+
+
+function setDiagnosticValue(
+    elementId,
+    passed,
+    passText = "MATCH ✓",
+    failText = "FAIL ✕"
+){
+    const element = document.getElementById(elementId);
+
+    if(!element){
+        return;
+    }
+
+    element.classList.remove(
+        "diag-value-pass",
+        "diag-value-fail"
+    );
+
+    if(passed){
+        element.classList.add("diag-value-pass");
+        element.textContent = passText;
+    }else{
+        element.classList.add("diag-value-fail");
+        element.textContent = failText;
+    }
+}
+
+
+async function runDiagnostics(){
+
+    show("diagnostics");
+
+    const loading = document.getElementById(
+        "diagnosticsLoading"
+    );
+
+    const content = document.getElementById(
+        "diagnosticsContent"
+    );
+
+    const errorBox = document.getElementById(
+        "diagnosticsError"
+    );
+
+    loading.style.display = "flex";
+    content.style.display = "none";
+
+    errorBox.classList.remove("visible");
+    errorBox.textContent = "";
+
+    try{
+
+        const response = await fetch(
+            "/api/advanced/diagnostics",
+            {
+                method: "POST"
+            }
+        );
+
+        const data = await response.json();
+
+        if(!response.ok || !data.success){
+            throw new Error(
+                data.detail ||
+                "Diagnostics request failed."
+            );
+        }
+
+        document.getElementById(
+            "diagnosticsMode"
+        ).textContent = data.diagnostic_mode;
+
+        document.getElementById(
+            "diagnosticsPhysical"
+        ).textContent =
+            data.physical_diagnostics
+            ? "ACTIVE"
+            : "NOT ACTIVE";
+
+
+        document.getElementById(
+            "diagnosticsConnected"
+        ).textContent =
+            data.programmer.connected
+            ? "CONNECTED ✓"
+            : "DISCONNECTED ✕";
+
+        document.getElementById(
+            "diagnosticsProgrammerMode"
+        ).textContent =
+            data.programmer.mode;
+
+        setDiagnosticStatus(
+            "diagnosticsProgrammerStatus",
+            data.programmer.connected,
+            "CONNECTED ✓",
+            "DISCONNECTED ✕"
+        );
+
+
+        document.getElementById(
+            "diagnosticsCable"
+        ).textContent =
+            data.connection.cable;
+
+        document.getElementById(
+            "diagnosticsCluster"
+        ).textContent =
+            data.connection.cluster;
+
+        setDiagnosticValue(
+            "diagnosticsCableMatch",
+            data.connection.cable_match
+        );
+
+        setDiagnosticValue(
+            "diagnosticsClusterMatch",
+            data.connection.cluster_match
+        );
+
+        setDiagnosticStatus(
+            "diagnosticsCommunicationStatus",
+            data.connection.communication_active,
+            "SIMULATED",
+            "NO COMMUNICATION ✕"
+        );
+
+
+        document.getElementById(
+            "diagnosticsVoltage"
+        ).textContent =
+            data.electrical.voltage.toFixed(1)
+            + " V";
+
+        document.getElementById(
+            "diagnosticsVoltageRange"
+        ).textContent =
+            data.electrical.voltage_min.toFixed(1)
+            + " – "
+            + data.electrical.voltage_max.toFixed(1)
+            + " V";
+
+        setDiagnosticValue(
+            "diagnosticsVoltageStatus",
+            data.electrical.voltage_valid,
+            "VALID ✓",
+            "OUT OF RANGE ✕"
+        );
+
+        setDiagnosticStatus(
+            "diagnosticsElectricalStatus",
+            data.electrical.voltage_valid,
+            "VOLTAGE OK ✓",
+            "VOLTAGE ALERT ✕"
+        );
+
+        document.getElementById(
+            "diagnosticsCurrent"
+        ).textContent =
+            data.electrical.current.toFixed(2)
+            + " A · MONITORING";
+
+
+        const events = document.getElementById(
+            "diagnosticsEvents"
+        );
+
+        events.innerHTML = "";
+
+        data.events.forEach(event => {
+
+            const row = document.createElement("div");
+
+            row.className =
+                "diag-event "
+                + event.level.toLowerCase();
+
+            const level = document.createElement("span");
+
+            level.className = "diag-event-level";
+            level.textContent = event.level;
+
+            const message = document.createElement("span");
+
+            message.className =
+                "diag-event-message";
+
+            message.textContent =
+                event.message;
+
+            row.appendChild(level);
+            row.appendChild(message);
+
+            events.appendChild(row);
+        });
+
+
+        loading.style.display = "none";
+        content.style.display = "block";
+
+    }catch(error){
+
+        loading.style.display = "none";
+        content.style.display = "none";
+
+        errorBox.textContent =
+            error.message ||
+            "Unable to run diagnostics.";
+
+        errorBox.classList.add("visible");
+    }
+}
+
+
+document.addEventListener('click', event => {
+    const tool = event.target.closest(
+        '[data-tool="diagnostics"]'
+    );
+
+    if(tool){
+        runDiagnostics();
+    }
+});
+
+
+
 function show(id){
     document.querySelectorAll('.screen').forEach(
         s => s.classList.remove('active')
@@ -3773,6 +4485,142 @@ async def advanced_identify_cluster():
             "success": False,
             "identification_mode": "SIMULATED",
             "physical_identification": False,
+            "detail": str(error),
+        }
+
+
+
+@app.post("/api/advanced/diagnostics")
+async def advanced_diagnostics():
+    """
+    Read-only development diagnostics.
+
+    All hardware information currently comes from the simulated
+    programmer. No physical diagnostic capability is claimed.
+    """
+
+    try:
+        profile_path = Path(
+            "vehicles/jeep/wrangler_2012_2018/profile.json"
+        )
+
+        if not profile_path.exists():
+            raise RuntimeError(
+                "Jeep vehicle profile not found."
+            )
+
+        profile = json.loads(
+            profile_path.read_text(encoding="utf-8")
+        )
+
+        hardware = SimulatedProgrammer()
+
+        connected = hardware.connect()
+
+        if not connected:
+            raise RuntimeError(
+                "Unable to connect to programmer."
+            )
+
+        cable = hardware.identify_cable()
+        cluster = hardware.identify_cluster()
+        voltage = hardware.measure_voltage()
+        current = hardware.measure_current()
+
+        cable_match = (
+            cable == profile["required_cable"]
+        )
+
+        cluster_match = (
+            cluster == profile["cluster_id"]
+        )
+
+        voltage_valid = (
+            profile["voltage_min"]
+            <= voltage
+            <= profile["voltage_max"]
+        )
+
+        communication_active = (
+            connected
+            and cluster is not None
+        )
+
+        return {
+            "success": True,
+            "diagnostic_mode": "SIMULATED",
+            "physical_diagnostics": False,
+            "read_only": True,
+
+            "programmer": {
+                "connected": connected,
+                "mode": "SIMULATOR",
+            },
+
+            "connection": {
+                "cable": cable,
+                "expected_cable": profile[
+                    "required_cable"
+                ],
+                "cable_match": cable_match,
+                "cluster": cluster,
+                "expected_cluster": profile[
+                    "cluster_id"
+                ],
+                "cluster_match": cluster_match,
+                "communication_active":
+                    communication_active,
+            },
+
+            "electrical": {
+                "voltage": voltage,
+                "voltage_min": profile[
+                    "voltage_min"
+                ],
+                "voltage_max": profile[
+                    "voltage_max"
+                ],
+                "voltage_valid": voltage_valid,
+                "current": current,
+                "current_validated": False,
+            },
+
+            "events": [
+                {
+                    "level": "INFO",
+                    "message":
+                        "Simulated programmer connected.",
+                },
+                {
+                    "level": "INFO",
+                    "message":
+                        "Cable identification completed.",
+                },
+                {
+                    "level": "INFO",
+                    "message":
+                        "Cluster identification completed.",
+                },
+                {
+                    "level":
+                        "PASS"
+                        if voltage_valid
+                        else "FAIL",
+                    "message":
+                        "Voltage within expected range."
+                        if voltage_valid
+                        else
+                        "Voltage outside expected range.",
+                },
+            ],
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "diagnostic_mode": "SIMULATED",
+            "physical_diagnostics": False,
+            "read_only": True,
             "detail": str(error),
         }
 

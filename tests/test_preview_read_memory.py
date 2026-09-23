@@ -227,3 +227,116 @@ def test_identity_match_is_separate_from_voltage_safety(
 
     assert validation["voltage_valid"] is False
     assert validation["safe_to_continue"] is False
+
+
+def diagnostics():
+    response = client.post(
+        "/api/advanced/diagnostics"
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload["success"] is True
+
+    return payload
+
+
+def test_diagnostics_is_explicitly_simulated_and_read_only():
+    payload = diagnostics()
+
+    assert payload["diagnostic_mode"] == "SIMULATED"
+    assert payload["physical_diagnostics"] is False
+    assert payload["read_only"] is True
+
+    assert payload["programmer"]["connected"] is True
+    assert payload["programmer"]["mode"] == "SIMULATOR"
+
+
+def test_diagnostics_connection_information():
+    payload = diagnostics()
+
+    connection = payload["connection"]
+
+    assert connection["cable"] == "CP-JEEP-004"
+    assert connection["expected_cable"] == "CP-JEEP-004"
+    assert connection["cable_match"] is True
+
+    assert (
+        connection["cluster"]
+        == "SIM-JEEP-WRANGLER-2012-2018"
+    )
+
+    assert (
+        connection["expected_cluster"]
+        == "SIM-JEEP-WRANGLER-2012-2018"
+    )
+
+    assert connection["cluster_match"] is True
+    assert connection["communication_active"] is True
+
+
+def test_diagnostics_electrical_information():
+    payload = diagnostics()
+
+    electrical = payload["electrical"]
+
+    assert electrical["voltage"] == 12.4
+    assert electrical["voltage_min"] == 11.8
+    assert electrical["voltage_max"] == 13.8
+    assert electrical["voltage_valid"] is True
+
+    assert electrical["current"] == 0.42
+    assert electrical["current_validated"] is False
+
+
+def test_diagnostics_event_log():
+    payload = diagnostics()
+
+    events = payload["events"]
+
+    assert len(events) == 4
+
+    assert events[0]["level"] == "INFO"
+
+    assert any(
+        event["level"] == "PASS"
+        and event["message"]
+        == "Voltage within expected range."
+        for event in events
+    )
+
+
+def test_diagnostics_reports_low_voltage(
+    monkeypatch,
+):
+    original_programmer = (
+        preview_module.SimulatedProgrammer
+    )
+
+    class LowVoltageProgrammer(
+        original_programmer
+    ):
+        def measure_voltage(self):
+            return 11.2
+
+    monkeypatch.setattr(
+        preview_module,
+        "SimulatedProgrammer",
+        LowVoltageProgrammer,
+    )
+
+    payload = diagnostics()
+
+    electrical = payload["electrical"]
+
+    assert electrical["voltage"] == 11.2
+    assert electrical["voltage_valid"] is False
+
+    assert any(
+        event["level"] == "FAIL"
+        and event["message"]
+        == "Voltage outside expected range."
+        for event in payload["events"]
+    )
