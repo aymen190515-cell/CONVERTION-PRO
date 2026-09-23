@@ -8,3 +8,5 @@ data/backups/*
 data/logs/*
 !data/backups/.gitkeep
 !data/logs/.gitkeep
+
+*.egg-info/
