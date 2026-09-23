@@ -159,6 +159,99 @@ h1{
 
 .back:hover{color:white}
 
+
+/* HOME TECHNICIAN MODE */
+
+.technician-section{
+    max-width:920px;
+    margin:24px auto 0;
+}
+
+.technician-section-label{
+    margin:0 0 8px 2px;
+    color:#1687ff;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1.6px;
+}
+
+.technician-panel{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:15px 17px;
+    border:1px solid #26384b;
+    border-radius:10px;
+    background:#0c141e;
+    color:white;
+    text-align:left;
+    transition:
+        border-color .18s ease,
+        background .18s ease;
+}
+
+.technician-panel:hover{
+    border-color:#3f6387;
+    background:#101c28;
+}
+
+.technician-panel-icon{
+    width:38px;
+    height:38px;
+    display:grid;
+    place-items:center;
+    flex:0 0 auto;
+    border-radius:8px;
+    background:#111f2d;
+    color:#1687ff;
+    font-size:23px;
+    font-weight:900;
+}
+
+.technician-panel-copy{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    flex:1;
+}
+
+.technician-panel-copy strong{
+    font-size:14px;
+    font-weight:850;
+}
+
+.technician-panel-copy span{
+    color:#74879b;
+    font-size:11px;
+}
+
+.technician-panel-arrow{
+    color:#71859a;
+    font-size:20px;
+}
+
+
+/* ADVANCED TOOL STATES */
+
+.tool-ready{
+    cursor:pointer;
+}
+
+.tool-ready:hover{
+    border-color:#1687ff;
+}
+
+.tool-disabled{
+    opacity:.42;
+    cursor:not-allowed;
+}
+
+.tool-disabled:hover{
+    border-color:#213246;
+    background:#0c151f;
+}
+
 /* CARDS */
 
 .card{
@@ -595,6 +688,7 @@ button.danger{
     padding:9px;
 }
 
+
 /* ANALYZE */
 
 .analyze{
@@ -942,16 +1036,14 @@ footer{
         </div>
     </div>
 
-    <div class="card card-pad selector-card">
+    <div class="selector-card card card-pad">
 
         <div class="selector-grid">
+
             <div>
                 <label>MAKE</label>
                 <select>
                     <option>Jeep</option>
-                    <option>Toyota</option>
-                    <option>Ford</option>
-                    <option>Chevrolet</option>
                 </select>
             </div>
 
@@ -961,6 +1053,7 @@ footer{
                     <option>Wrangler 2012–2018</option>
                 </select>
             </div>
+
         </div>
 
         <div class="selector-actions">
@@ -972,6 +1065,7 @@ footer{
         <div class="recent-title">Recent Vehicles</div>
 
         <div class="recent-grid">
+
             <div class="recent" onclick="show('guide')">
                 <small>JEEP</small>
                 <strong>Wrangler 2012–2018</strong>
@@ -991,7 +1085,32 @@ footer{
                 <small>CHEVROLET</small>
                 <strong>Silverado</strong>
             </div>
+
         </div>
+
+    </div>
+
+    <div class="technician-section">
+
+        <div class="technician-section-label">
+            TECHNICIAN MODE
+        </div>
+
+        <button
+            class="technician-panel"
+            onclick="openAdvancedTools('select')"
+        >
+            <div class="technician-panel-icon">⌁</div>
+
+            <div class="technician-panel-copy">
+                <strong>Advanced Tools</strong>
+                <span>
+                    Memory, diagnostics and manual cluster operations.
+                </span>
+            </div>
+
+            <div class="technician-panel-arrow">→</div>
+        </button>
 
     </div>
 
@@ -1252,7 +1371,7 @@ footer{
                 CONVERT
             </button>
 
-            <button class="advanced-link" onclick="show('advanced')">
+            <button class="advanced-link" onclick="openAdvancedTools('ready')">
                 Advanced Tools
             </button>
 
@@ -1464,7 +1583,12 @@ footer{
 
 <section id="advanced" class="screen">
 
-    <button class="back" onclick="show('ready')">← Cluster Ready</button>
+    <button
+        class="back"
+        onclick="closeAdvancedTools()"
+    >
+        ← Back
+    </button>
 
     <div class="heading-row">
         <div>
@@ -1476,49 +1600,49 @@ footer{
         </div>
     </div>
 
-    <div class="tool-grid">
+<div class="tool-grid">
 
-        <button class="tool">
+        <button class="tool tool-ready" data-tool="read-memory">
             <strong>Read Memory</strong>
             <small>Read cluster memory and create a local dump.</small>
         </button>
 
-        <button class="tool">
+        <button class="tool tool-disabled" disabled>
             <strong>Write Memory</strong>
             <small>Protected manual memory programming operation.</small>
         </button>
 
-        <button class="tool">
+        <button class="tool tool-disabled" disabled>
             <strong>Verify Memory</strong>
             <small>Compare programmed data with read-back data.</small>
         </button>
 
-        <button class="tool">
+        <button class="tool tool-ready" data-tool="identify-cluster">
             <strong>Identify Cluster</strong>
             <small>Read hardware, software and profile identifiers.</small>
         </button>
 
-        <button class="tool">
+        <button class="tool tool-disabled" disabled>
             <strong>Open File</strong>
             <small>Load a supported cluster data file.</small>
         </button>
 
-        <button class="tool">
+        <button class="tool tool-disabled" disabled>
             <strong>Save File</strong>
             <small>Save currently loaded memory data.</small>
         </button>
 
-        <button class="tool">
+        <button class="tool tool-disabled" disabled>
             <strong>Compare Files</strong>
             <small>Inspect differences between two memory files.</small>
         </button>
 
-        <button class="tool">
+        <button class="tool tool-disabled" disabled>
             <strong>Restore Original Backup</strong>
             <small>Restore the automatically saved original data.</small>
         </button>
 
-        <button class="tool">
+        <button class="tool tool-ready" data-tool="diagnostics">
             <strong>Diagnostics</strong>
             <small>Voltage, current, communication and system logs.</small>
         </button>
@@ -1547,6 +1671,24 @@ footer{
 </div>
 
 <script>
+
+let advancedToolsReturnScreen = 'select';
+
+function openAdvancedTools(returnScreen){
+    advancedToolsReturnScreen =
+        returnScreen || 'select';
+
+    show('advanced');
+}
+
+
+
+function closeAdvancedTools(){
+    show(
+        advancedToolsReturnScreen || 'select'
+    );
+}
+
 function show(id){
     document.querySelectorAll('.screen').forEach(
         s => s.classList.remove('active')
