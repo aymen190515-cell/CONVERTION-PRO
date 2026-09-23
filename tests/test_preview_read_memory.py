@@ -101,3 +101,96 @@ def test_read_memory_annotations_match_validated_offsets():
     }
 
     assert offsets == {0x68, 0x69}
+
+
+def identify_cluster():
+    response = client.post(
+        "/api/advanced/identify-cluster"
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload["success"] is True
+
+    return payload
+
+
+def test_identify_cluster_is_explicitly_simulated():
+    payload = identify_cluster()
+
+    assert (
+        payload["identification_mode"]
+        == "SIMULATED"
+    )
+
+    assert (
+        payload["physical_identification"]
+        is False
+    )
+
+
+def test_identify_cluster_matches_selected_profile():
+    payload = identify_cluster()
+
+    assert (
+        payload["expected"]["cluster_id"]
+        == "SIM-JEEP-WRANGLER-2012-2018"
+    )
+
+    assert (
+        payload["detected"]["cluster_id"]
+        == payload["expected"]["cluster_id"]
+    )
+
+    assert (
+        payload["expected"]["cable"]
+        == "CP-JEEP-004"
+    )
+
+    assert (
+        payload["detected"]["cable"]
+        == payload["expected"]["cable"]
+    )
+
+    validation = payload["validation"]
+
+    assert validation["cluster_match"] is True
+    assert validation["cable_match"] is True
+    assert validation["voltage_valid"] is True
+    assert validation["profile_match"] is True
+
+
+def test_identify_cluster_returns_profile_information():
+    payload = identify_cluster()
+
+    assert payload["vehicle"] == {
+        "make": "Jeep",
+        "model": "Wrangler",
+        "generation": "2012-2018",
+    }
+
+    assert payload["connection_method"] == "BENCH"
+
+    assert (
+        payload["expected"]["memory_type"]
+        == "EEPROM"
+    )
+
+    assert (
+        payload["expected"]["memory_size"]
+        == 1024
+    )
+
+
+def test_identify_cluster_current_is_monitoring_only():
+    payload = identify_cluster()
+
+    assert payload["detected"]["voltage"] == 12.4
+    assert payload["detected"]["current"] == 0.42
+
+    assert (
+        payload["validation"]["current_validated"]
+        is False
+    )

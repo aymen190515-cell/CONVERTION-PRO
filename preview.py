@@ -1252,6 +1252,290 @@ footer{
     }
 }
 
+
+/* CLUSTER IDENTIFICATION */
+
+.ident-summary{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    padding:18px 20px;
+    margin-bottom:16px;
+}
+
+.ident-summary-left{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.ident-mode{
+    display:inline-flex;
+    align-items:center;
+    min-height:26px;
+    padding:0 10px;
+    border:1px solid #735a22;
+    border-radius:6px;
+    background:#211a0b;
+    color:#e8b84d;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.ident-physical{
+    color:#8495a7;
+    font-size:10px;
+    font-weight:700;
+}
+
+.ident-vehicle{
+    text-align:right;
+}
+
+.ident-vehicle small{
+    display:block;
+    margin-bottom:4px;
+    color:#60748a;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.ident-vehicle strong{
+    color:#dce5ee;
+    font-size:12px;
+}
+
+.ident-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+}
+
+.ident-panel{
+    padding:18px;
+}
+
+.ident-panel-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.ident-panel-title span:first-child{
+    color:#71859a;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1.4px;
+}
+
+.ident-panel-badge{
+    padding:5px 8px;
+    border:1px solid #26384b;
+    border-radius:5px;
+    background:#0c141d;
+    color:#7f93a8;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.ident-row{
+    display:grid;
+    grid-template-columns:120px minmax(0,1fr);
+    gap:14px;
+    align-items:center;
+    min-height:45px;
+    border-top:1px solid #182432;
+}
+
+.ident-row:first-of-type{
+    border-top:0;
+}
+
+.ident-row small{
+    color:#60748a;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:.8px;
+}
+
+.ident-row strong,
+.ident-row code{
+    color:#d5dfe9;
+    font-size:10px;
+    line-height:1.45;
+    word-break:break-word;
+}
+
+.ident-monitoring{
+    color:#8fa5ba !important;
+}
+
+.ident-validation{
+    padding:18px;
+}
+
+.ident-checks{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:14px;
+}
+
+.ident-check{
+    min-height:72px;
+    padding:13px;
+    border:1px solid #1e3143;
+    border-radius:8px;
+    background:#0a1118;
+}
+
+.ident-check small{
+    display:block;
+    margin-bottom:8px;
+    color:#60748a;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.ident-check strong{
+    color:#7d8fa2;
+    font-size:10px;
+}
+
+.ident-check.pass{
+    border-color:#1c5542;
+    background:#0a1915;
+}
+
+.ident-check.pass strong{
+    color:#74d9af;
+}
+
+.ident-check.fail{
+    border-color:#65303a;
+    background:#241218;
+}
+
+.ident-check.fail strong{
+    color:#ff8791;
+}
+
+.ident-result{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    margin-top:14px;
+    padding:17px 18px;
+    border:1px solid #26384b;
+    border-radius:9px;
+    background:#0a1118;
+}
+
+.ident-result.pass{
+    border-color:#1d5b45;
+    background:#091914;
+}
+
+.ident-result.fail{
+    border-color:#65303a;
+    background:#241218;
+}
+
+.ident-result small{
+    display:block;
+    margin-bottom:5px;
+    color:#60748a;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.ident-result strong{
+    color:#dce5ee;
+    font-size:16px;
+}
+
+.ident-result.pass strong{
+    color:#76ddb3;
+}
+
+.ident-result.fail strong{
+    color:#ff8791;
+}
+
+.ident-result-icon{
+    font-size:24px;
+    font-weight:900;
+}
+
+.ident-result.pass .ident-result-icon{
+    color:#76ddb3;
+}
+
+.ident-result.fail .ident-result-icon{
+    color:#ff8791;
+}
+
+.ident-error{
+    display:none;
+    margin-bottom:14px;
+    padding:13px 15px;
+    border:1px solid #65303a;
+    border-radius:8px;
+    background:#241218;
+    color:#ff8791;
+    font-size:11px;
+}
+
+.ident-error.visible{
+    display:block;
+}
+
+.ident-loading{
+    min-height:300px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:14px;
+    text-align:center;
+}
+
+@media(max-width:800px){
+    .ident-grid{
+        grid-template-columns:1fr;
+    }
+
+    .ident-checks{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:600px){
+    .ident-summary{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .ident-vehicle{
+        text-align:left;
+    }
+
+    .ident-row{
+        grid-template-columns:100px minmax(0,1fr);
+    }
+}
+
 /* RESPONSIVE */
 
 @media(max-width:800px){
@@ -1929,6 +2213,240 @@ footer{
 </section>
 
 
+
+<!-- CLUSTER IDENTIFICATION -->
+
+<section id="identify" class="screen">
+
+    <button class="back" onclick="show('advanced')">
+        ← Advanced Tools
+    </button>
+
+    <div class="heading-row">
+        <div>
+            <div class="eyebrow">
+                TECHNICIAN MODE · IDENTIFICATION
+            </div>
+
+            <h1>Cluster Identification</h1>
+
+            <p class="subtitle">
+                Compare the selected vehicle profile with the
+                cluster reported by the connected programmer.
+            </p>
+        </div>
+    </div>
+
+    <div id="identifyError" class="ident-error"></div>
+
+    <div id="identifyLoading" class="card ident-loading">
+        <div class="memory-loading-ring"></div>
+
+        <div>
+            <strong>Identifying Cluster</strong>
+
+            <p class="subtitle">
+                Reading available identifiers and validating
+                the selected profile...
+            </p>
+        </div>
+    </div>
+
+    <div id="identifyContent" style="display:none">
+
+        <div class="card ident-summary">
+
+            <div class="ident-summary-left">
+
+                <span
+                    class="ident-mode"
+                    id="identifyMode"
+                >
+                    SIMULATED
+                </span>
+
+                <span class="ident-physical">
+                    Physical identification:
+                    <strong id="identifyPhysical">
+                        NOT ACTIVE
+                    </strong>
+                </span>
+
+            </div>
+
+            <div class="ident-vehicle">
+                <small>SELECTED VEHICLE</small>
+                <strong id="identifyVehicle">---</strong>
+            </div>
+
+        </div>
+
+
+        <div class="ident-grid">
+
+            <div class="card ident-panel">
+
+                <div class="ident-panel-title">
+                    <span>EXPECTED</span>
+                    <span class="ident-panel-badge">
+                        VEHICLE PROFILE
+                    </span>
+                </div>
+
+                <div class="ident-row">
+                    <small>CLUSTER ID</small>
+                    <code id="identifyExpectedCluster">
+                        ---
+                    </code>
+                </div>
+
+                <div class="ident-row">
+                    <small>CABLE</small>
+                    <strong id="identifyExpectedCable">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="ident-row">
+                    <small>CONNECTION</small>
+                    <strong id="identifyConnection">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="ident-row">
+                    <small>MEMORY</small>
+                    <strong id="identifyMemory">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="ident-row">
+                    <small>VOLTAGE RANGE</small>
+                    <strong id="identifyVoltageRange">
+                        ---
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <div class="card ident-panel">
+
+                <div class="ident-panel-title">
+                    <span>DETECTED</span>
+                    <span class="ident-panel-badge">
+                        PROGRAMMER
+                    </span>
+                </div>
+
+                <div class="ident-row">
+                    <small>CLUSTER ID</small>
+                    <code id="identifyDetectedCluster">
+                        ---
+                    </code>
+                </div>
+
+                <div class="ident-row">
+                    <small>CABLE</small>
+                    <strong id="identifyDetectedCable">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="ident-row">
+                    <small>VOLTAGE</small>
+                    <strong id="identifyDetectedVoltage">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="ident-row">
+                    <small>CURRENT</small>
+                    <strong
+                        class="ident-monitoring"
+                        id="identifyDetectedCurrent"
+                    >
+                        ---
+                    </strong>
+                </div>
+
+                <div class="ident-row">
+                    <small>IDENTIFICATION</small>
+                    <strong id="identifyDetectionType">
+                        SIMULATED
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card ident-validation">
+
+            <div class="ident-panel-title">
+                <span>PROFILE VALIDATION</span>
+
+                <span class="ident-panel-badge">
+                    SAFETY CHECK
+                </span>
+            </div>
+
+            <div class="ident-checks">
+
+                <div
+                    class="ident-check"
+                    id="identifyClusterCheck"
+                >
+                    <small>CLUSTER</small>
+                    <strong>WAITING</strong>
+                </div>
+
+                <div
+                    class="ident-check"
+                    id="identifyCableCheck"
+                >
+                    <small>CABLE</small>
+                    <strong>WAITING</strong>
+                </div>
+
+                <div
+                    class="ident-check"
+                    id="identifyVoltageCheck"
+                >
+                    <small>VOLTAGE</small>
+                    <strong>WAITING</strong>
+                </div>
+
+            </div>
+
+            <div
+                class="ident-result"
+                id="identifyResult"
+            >
+                <div>
+                    <small>FINAL RESULT</small>
+                    <strong id="identifyResultText">
+                        WAITING
+                    </strong>
+                </div>
+
+                <div
+                    class="ident-result-icon"
+                    id="identifyResultIcon"
+                >
+                    ·
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
 <!-- MEMORY WORKSPACE -->
 
 <section id="memory" class="screen">
@@ -2385,6 +2903,231 @@ document.addEventListener('keydown', event => {
             document.getElementById('memoryOffsetInput')
     ){
         goToMemoryOffset();
+    }
+});
+
+
+
+function setIdentifyCheck(elementId, passed){
+    const element =
+        document.getElementById(elementId);
+
+    element.classList.remove(
+        'pass',
+        'fail'
+    );
+
+    element.classList.add(
+        passed ? 'pass' : 'fail'
+    );
+
+    const text =
+        element.querySelector('strong');
+
+    text.textContent =
+        passed ? 'MATCH ✓' : 'MISMATCH ✕';
+}
+
+
+async function identifyCluster(){
+    show('identify');
+
+    const loading =
+        document.getElementById(
+            'identifyLoading'
+        );
+
+    const content =
+        document.getElementById(
+            'identifyContent'
+        );
+
+    const errorBox =
+        document.getElementById(
+            'identifyError'
+        );
+
+    loading.style.display = '';
+    content.style.display = 'none';
+
+    errorBox.classList.remove('visible');
+    errorBox.textContent = '';
+
+    try {
+        const response = await fetch(
+            '/api/advanced/identify-cluster',
+            {method:'POST'}
+        );
+
+        const data = await response.json();
+
+        if(!response.ok || !data.success){
+            throw new Error(
+                data.detail ||
+                'Cluster identification failed.'
+            );
+        }
+
+        const vehicle = data.vehicle;
+
+        document.getElementById(
+            'identifyMode'
+        ).textContent =
+            data.identification_mode;
+
+        document.getElementById(
+            'identifyPhysical'
+        ).textContent =
+            data.physical_identification
+                ? 'ACTIVE'
+                : 'NOT ACTIVE';
+
+        document.getElementById(
+            'identifyVehicle'
+        ).textContent =
+            vehicle.make +
+            ' ' +
+            vehicle.model +
+            ' ' +
+            vehicle.generation;
+
+        document.getElementById(
+            'identifyExpectedCluster'
+        ).textContent =
+            data.expected.cluster_id;
+
+        document.getElementById(
+            'identifyExpectedCable'
+        ).textContent =
+            data.expected.cable;
+
+        document.getElementById(
+            'identifyConnection'
+        ).textContent =
+            data.connection_method;
+
+        document.getElementById(
+            'identifyMemory'
+        ).textContent =
+            data.expected.memory_type +
+            ' · ' +
+            data.expected.memory_size +
+            ' bytes';
+
+        document.getElementById(
+            'identifyVoltageRange'
+        ).textContent =
+            Number(
+                data.voltage_range.minimum
+            ).toFixed(1) +
+            ' – ' +
+            Number(
+                data.voltage_range.maximum
+            ).toFixed(1) +
+            ' V';
+
+        document.getElementById(
+            'identifyDetectedCluster'
+        ).textContent =
+            data.detected.cluster_id;
+
+        document.getElementById(
+            'identifyDetectedCable'
+        ).textContent =
+            data.detected.cable;
+
+        document.getElementById(
+            'identifyDetectedVoltage'
+        ).textContent =
+            Number(
+                data.detected.voltage
+            ).toFixed(1) +
+            ' V';
+
+        document.getElementById(
+            'identifyDetectedCurrent'
+        ).textContent =
+            Number(
+                data.detected.current
+            ).toFixed(2) +
+            ' A · MONITORING';
+
+        document.getElementById(
+            'identifyDetectionType'
+        ).textContent =
+            data.identification_mode;
+
+        setIdentifyCheck(
+            'identifyClusterCheck',
+            data.validation.cluster_match
+        );
+
+        setIdentifyCheck(
+            'identifyCableCheck',
+            data.validation.cable_match
+        );
+
+        setIdentifyCheck(
+            'identifyVoltageCheck',
+            data.validation.voltage_valid
+        );
+
+        const result =
+            document.getElementById(
+                'identifyResult'
+            );
+
+        const resultText =
+            document.getElementById(
+                'identifyResultText'
+            );
+
+        const resultIcon =
+            document.getElementById(
+                'identifyResultIcon'
+            );
+
+        result.classList.remove(
+            'pass',
+            'fail'
+        );
+
+        if(data.validation.profile_match){
+            result.classList.add('pass');
+            resultText.textContent =
+                'PROFILE MATCH';
+            resultIcon.textContent = '✓';
+        } else {
+            result.classList.add('fail');
+            resultText.textContent =
+                'PROFILE MISMATCH';
+            resultIcon.textContent = '✕';
+        }
+
+        loading.style.display = 'none';
+        content.style.display = '';
+
+    } catch(error) {
+        loading.style.display = 'none';
+        content.style.display = 'none';
+
+        errorBox.textContent =
+            error.message;
+
+        errorBox.classList.add(
+            'visible'
+        );
+    }
+}
+
+
+document.addEventListener('click', event => {
+    const tool = event.target.closest(
+        '[data-tool="identify-cluster"]'
+    );
+
+    if(tool){
+        identifyCluster();
     }
 });
 
@@ -2854,6 +3597,121 @@ async def safety_check():
             "detail": str(error),
         }
 
+
+
+
+@app.post("/api/advanced/identify-cluster")
+async def advanced_identify_cluster():
+    """
+    Development-only cluster identification.
+
+    The current programmer is simulated. No claim is made that
+    physical cluster identification is implemented yet.
+    """
+
+    try:
+        profile_path = Path(
+            "vehicles/jeep/wrangler_2012_2018/profile.json"
+        )
+
+        if not profile_path.exists():
+            raise RuntimeError(
+                "Jeep vehicle profile not found."
+            )
+
+        profile = json.loads(
+            profile_path.read_text(encoding="utf-8")
+        )
+
+        hardware = SimulatedProgrammer()
+
+        if not hardware.connect():
+            raise RuntimeError(
+                "Unable to connect to programmer."
+            )
+
+        detected_cluster = hardware.identify_cluster()
+        detected_cable = hardware.identify_cable()
+        voltage = hardware.measure_voltage()
+        current = hardware.measure_current()
+
+        expected_cluster = profile["cluster_id"]
+        expected_cable = profile["required_cable"]
+
+        cluster_match = (
+            detected_cluster == expected_cluster
+        )
+
+        cable_match = (
+            detected_cable == expected_cable
+        )
+
+        voltage_valid = (
+            profile["voltage_min"]
+            <= voltage
+            <= profile["voltage_max"]
+        )
+
+        profile_match = (
+            cluster_match
+            and cable_match
+            and voltage_valid
+        )
+
+        return {
+            "success": True,
+
+            # Critical truthfulness flag.
+            "identification_mode": "SIMULATED",
+            "physical_identification": False,
+
+            "vehicle": {
+                "make": profile["make"],
+                "model": profile["model"],
+                "generation": profile["generation"],
+            },
+
+            "connection_method": profile[
+                "connection_method"
+            ],
+
+            "expected": {
+                "cluster_id": expected_cluster,
+                "cable": expected_cable,
+                "memory_type": profile["memory"]["type"],
+                "memory_size": profile["memory"][
+                    "size_bytes"
+                ],
+            },
+
+            "detected": {
+                "cluster_id": detected_cluster,
+                "cable": detected_cable,
+                "voltage": voltage,
+                "current": current,
+            },
+
+            "validation": {
+                "cluster_match": cluster_match,
+                "cable_match": cable_match,
+                "voltage_valid": voltage_valid,
+                "profile_match": profile_match,
+                "current_validated": False,
+            },
+
+            "voltage_range": {
+                "minimum": profile["voltage_min"],
+                "maximum": profile["voltage_max"],
+            },
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "identification_mode": "SIMULATED",
+            "physical_identification": False,
+            "detail": str(error),
+        }
 
 
 @app.post("/api/advanced/read-memory")
