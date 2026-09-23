@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from pathlib import Path
+import hashlib
 import json
 import uvicorn
 
@@ -975,6 +976,282 @@ footer{
     display:block;
 }
 
+
+/* MEMORY WORKSPACE */
+
+.memory-workspace{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 280px;
+    gap:16px;
+    align-items:start;
+}
+
+.memory-main{
+    min-width:0;
+}
+
+.memory-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:12px;
+}
+
+.memory-title-group{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.memory-badge{
+    display:inline-flex;
+    align-items:center;
+    min-height:25px;
+    padding:0 9px;
+    border-radius:6px;
+    border:1px solid #24558b;
+    background:#0b1d30;
+    color:#67afff;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.memory-badge.readonly{
+    border-color:#31506f;
+    background:#101923;
+    color:#94a9bf;
+}
+
+.memory-search{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.memory-search input{
+    width:130px;
+    height:34px;
+    padding:0 10px;
+    border-radius:7px;
+    border:1px solid var(--border2);
+    outline:none;
+    background:#080e15;
+    color:var(--text);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px;
+}
+
+.memory-search input:focus{
+    border-color:var(--blue);
+}
+
+.memory-search button{
+    height:34px;
+    padding:0 13px;
+    border:1px solid #285f99;
+    border-radius:7px;
+    background:#0d2742;
+    color:#75b8ff;
+    font-size:10px;
+    font-weight:800;
+}
+
+.hex-shell{
+    overflow:auto;
+    max-height:520px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:#070c12;
+}
+
+.hex-table{
+    width:max-content;
+    min-width:100%;
+    border-collapse:collapse;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11px;
+    line-height:1;
+}
+
+.hex-table th{
+    position:sticky;
+    top:0;
+    z-index:3;
+    padding:11px 5px;
+    background:#101923;
+    color:#65788d;
+    font-weight:700;
+    border-bottom:1px solid var(--border);
+}
+
+.hex-table th:first-child{
+    left:0;
+    z-index:4;
+    padding-left:12px;
+    padding-right:14px;
+}
+
+.hex-table td{
+    padding:5px;
+    text-align:center;
+    color:#b8c5d3;
+    white-space:nowrap;
+}
+
+.hex-table td.offset{
+    position:sticky;
+    left:0;
+    z-index:2;
+    padding-left:12px;
+    padding-right:14px;
+    background:#0a1119;
+    color:#54708c;
+    text-align:left;
+}
+
+.hex-table td.byte{
+    min-width:27px;
+    border-radius:4px;
+}
+
+.hex-table td.byte.annotated{
+    background:#102c49;
+    color:#55a9ff;
+    font-weight:900;
+    outline:1px solid #1c6fc3;
+}
+
+.hex-table td.byte.target{
+    background:#164f80;
+    color:white;
+    outline:1px solid #53aaff;
+}
+
+.hex-table td.ascii{
+    padding-left:16px;
+    padding-right:12px;
+    color:#6f8195;
+    letter-spacing:1px;
+    text-align:left;
+    border-left:1px solid #182432;
+}
+
+.memory-side{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.memory-info{
+    padding:16px;
+}
+
+.memory-info-title{
+    margin-bottom:12px;
+    color:#60748b;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1.4px;
+}
+
+.memory-info-row{
+    padding:10px 0;
+    border-bottom:1px solid #182432;
+}
+
+.memory-info-row:last-child{
+    border-bottom:0;
+}
+
+.memory-info-row small{
+    display:block;
+    margin-bottom:5px;
+    color:#62758a;
+    font-size:8px;
+    font-weight:800;
+    letter-spacing:1px;
+}
+
+.memory-info-row strong,
+.memory-info-row code{
+    display:block;
+    color:#d7e0e9;
+    font-size:10px;
+    line-height:1.45;
+    word-break:break-all;
+}
+
+.memory-info-row .monitoring{
+    color:#8da3b9;
+}
+
+.memory-loading{
+    min-height:360px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    text-align:center;
+}
+
+.memory-loading-ring{
+    width:38px;
+    height:38px;
+    border:3px solid #17304a;
+    border-top-color:var(--blue);
+    border-radius:50%;
+    animation:memorySpin .8s linear infinite;
+}
+
+@keyframes memorySpin{
+    to{transform:rotate(360deg)}
+}
+
+.memory-error{
+    display:none;
+    margin-bottom:14px;
+    padding:13px 15px;
+    border:1px solid #65303a;
+    border-radius:8px;
+    background:#241218;
+    color:#ff8791;
+    font-size:11px;
+}
+
+.memory-error.visible{
+    display:block;
+}
+
+@media(max-width:900px){
+    .memory-workspace{
+        grid-template-columns:1fr;
+    }
+
+    .memory-side{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+    }
+}
+
+@media(max-width:600px){
+    .memory-toolbar{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .memory-side{
+        display:block;
+    }
+
+    .memory-side > *{
+        margin-bottom:12px;
+    }
+}
+
 /* RESPONSIVE */
 
 @media(max-width:800px){
@@ -1651,6 +1928,143 @@ footer{
 
 </section>
 
+
+<!-- MEMORY WORKSPACE -->
+
+<section id="memory" class="screen">
+
+    <button class="back" onclick="show('advanced')">
+        ← Advanced Tools
+    </button>
+
+    <div class="heading-row">
+        <div>
+            <div class="eyebrow">TECHNICIAN MODE · MEMORY</div>
+            <h1>Memory Workspace</h1>
+            <p class="subtitle">
+                Inspect cluster memory without modifying the connected device.
+            </p>
+        </div>
+    </div>
+
+    <div id="memoryError" class="memory-error"></div>
+
+    <div id="memoryLoading" class="card memory-loading">
+        <div class="memory-loading-ring"></div>
+        <div>
+            <strong>Reading Cluster Memory</strong>
+            <p class="subtitle">
+                Checking connection and reading the memory device...
+            </p>
+        </div>
+    </div>
+
+    <div id="memoryContent" style="display:none">
+
+        <div class="memory-workspace">
+
+            <div class="card card-pad memory-main">
+
+                <div class="memory-toolbar">
+
+                    <div class="memory-title-group">
+                        <span class="memory-badge" id="memoryTypeBadge">
+                            EEPROM
+                        </span>
+
+                        <span class="memory-badge readonly">
+                            READ ONLY
+                        </span>
+
+                        <span class="memory-badge readonly" id="memorySizeBadge">
+                            --- BYTES
+                        </span>
+                    </div>
+
+                    <div class="memory-search">
+                        <input
+                            id="memoryOffsetInput"
+                            type="text"
+                            value="0x68"
+                            placeholder="0x68"
+                            autocomplete="off"
+                        >
+                        <button onclick="goToMemoryOffset()">
+                            Go To
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="hex-shell" id="hexShell">
+                    <table class="hex-table">
+                        <thead id="hexHead"></thead>
+                        <tbody id="hexBody"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <div class="memory-side">
+
+                <div class="card memory-info">
+                    <div class="memory-info-title">
+                        CLUSTER INFORMATION
+                    </div>
+
+                    <div class="memory-info-row">
+                        <small>VEHICLE</small>
+                        <strong id="memoryVehicle">---</strong>
+                    </div>
+
+                    <div class="memory-info-row">
+                        <small>CLUSTER ID</small>
+                        <code id="memoryClusterId">---</code>
+                    </div>
+
+                    <div class="memory-info-row">
+                        <small>CABLE</small>
+                        <strong id="memoryCable">---</strong>
+                    </div>
+
+                    <div class="memory-info-row">
+                        <small>VOLTAGE</small>
+                        <strong id="memoryVoltage">---</strong>
+                    </div>
+
+                    <div class="memory-info-row">
+                        <small>CURRENT</small>
+                        <strong class="monitoring" id="memoryCurrent">---</strong>
+                    </div>
+                </div>
+
+                <div class="card memory-info">
+                    <div class="memory-info-title">
+                        MEMORY INFORMATION
+                    </div>
+
+                    <div class="memory-info-row">
+                        <small>TYPE</small>
+                        <strong id="memoryType">---</strong>
+                    </div>
+
+                    <div class="memory-info-row">
+                        <small>SIZE</small>
+                        <strong id="memorySize">---</strong>
+                    </div>
+
+                    <div class="memory-info-row">
+                        <small>SHA-256</small>
+                        <code id="memorySha">---</code>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</section>
+
 </main>
 
 <footer>
@@ -1688,6 +2102,292 @@ function closeAdvancedTools(){
         advancedToolsReturnScreen || 'select'
     );
 }
+
+
+let currentMemoryBytes = [];
+let currentMemoryAnnotations = new Set();
+
+
+async function readMemory(){
+    show('memory');
+
+    const loading = document.getElementById('memoryLoading');
+    const content = document.getElementById('memoryContent');
+    const errorBox = document.getElementById('memoryError');
+
+    loading.style.display = '';
+    content.style.display = 'none';
+    errorBox.classList.remove('visible');
+    errorBox.textContent = '';
+
+    try {
+        const response = await fetch(
+            '/api/advanced/read-memory',
+            {method:'POST'}
+        );
+
+        const data = await response.json();
+
+        if(!response.ok || !data.success){
+            throw new Error(
+                data.detail ||
+                'Memory could not be read.'
+            );
+        }
+
+        if(
+            typeof data.data_hex !== 'string' ||
+            data.data_hex.length % 2 !== 0
+        ){
+            throw new Error(
+                'Invalid memory data received.'
+            );
+        }
+
+        currentMemoryBytes = [];
+
+        for(let i = 0; i < data.data_hex.length; i += 2){
+            currentMemoryBytes.push(
+                parseInt(
+                    data.data_hex.slice(i, i + 2),
+                    16
+                )
+            );
+        }
+
+        if(currentMemoryBytes.length !== data.memory_size){
+            throw new Error(
+                'Memory size does not match received data.'
+            );
+        }
+
+        currentMemoryAnnotations = new Set(
+            (data.annotations || []).map(
+                item => Number(item.offset)
+            )
+        );
+
+        document.getElementById(
+            'memoryTypeBadge'
+        ).textContent = data.memory_type;
+
+        document.getElementById(
+            'memorySizeBadge'
+        ).textContent = data.memory_size + ' BYTES';
+
+        document.getElementById(
+            'memoryVehicle'
+        ).textContent = data.vehicle;
+
+        document.getElementById(
+            'memoryClusterId'
+        ).textContent = data.cluster_id;
+
+        document.getElementById(
+            'memoryCable'
+        ).textContent = data.cable;
+
+        document.getElementById(
+            'memoryVoltage'
+        ).textContent =
+            Number(data.voltage).toFixed(1) + ' V';
+
+        document.getElementById(
+            'memoryCurrent'
+        ).textContent =
+            Number(data.current).toFixed(2) +
+            ' A · MONITORING';
+
+        document.getElementById(
+            'memoryType'
+        ).textContent = data.memory_type;
+
+        document.getElementById(
+            'memorySize'
+        ).textContent =
+            data.memory_size + ' bytes';
+
+        document.getElementById(
+            'memorySha'
+        ).textContent = data.sha256;
+
+        renderHexViewer();
+
+        loading.style.display = 'none';
+        content.style.display = '';
+
+    } catch(error) {
+        loading.style.display = 'none';
+        content.style.display = 'none';
+
+        errorBox.textContent = error.message;
+        errorBox.classList.add('visible');
+    }
+}
+
+
+function renderHexViewer(){
+    const head = document.getElementById('hexHead');
+    const body = document.getElementById('hexBody');
+
+    let header = '<tr><th>OFFSET</th>';
+
+    for(let i = 0; i < 16; i++){
+        header +=
+            '<th>' +
+            i.toString(16)
+                .toUpperCase()
+                .padStart(2,'0') +
+            '</th>';
+    }
+
+    header += '<th>ASCII</th></tr>';
+    head.innerHTML = header;
+
+    let rows = '';
+
+    for(
+        let offset = 0;
+        offset < currentMemoryBytes.length;
+        offset += 16
+    ){
+        rows += '<tr>';
+
+        rows +=
+            '<td class="offset">' +
+            offset.toString(16)
+                .toUpperCase()
+                .padStart(8,'0') +
+            '</td>';
+
+        let ascii = '';
+
+        for(let column = 0; column < 16; column++){
+            const index = offset + column;
+
+            if(index < currentMemoryBytes.length){
+                const value = currentMemoryBytes[index];
+
+                const annotated =
+                    currentMemoryAnnotations.has(index)
+                        ? ' annotated'
+                        : '';
+
+                rows +=
+                    '<td class="byte' + annotated + '"' +
+                    ' id="memory-byte-' + index + '"' +
+                    ' title="Offset 0x' +
+                    index.toString(16).toUpperCase() +
+                    '">' +
+                    value.toString(16)
+                        .toUpperCase()
+                        .padStart(2,'0') +
+                    '</td>';
+
+                ascii +=
+                    value >= 32 && value <= 126
+                        ? String.fromCharCode(value)
+                        : '.';
+
+            } else {
+                rows += '<td class="byte"></td>';
+                ascii += ' ';
+            }
+        }
+
+        const safeAscii = ascii
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;');
+
+        rows +=
+            '<td class="ascii">' +
+            safeAscii +
+            '</td>';
+
+        rows += '</tr>';
+    }
+
+    body.innerHTML = rows;
+}
+
+
+function goToMemoryOffset(){
+    const input =
+        document.getElementById(
+            'memoryOffsetInput'
+        );
+
+    const raw = input.value.trim();
+
+    let offset;
+
+    if(/^0x[0-9a-f]+$/i.test(raw)){
+        offset = parseInt(
+            raw.slice(2),
+            16
+        );
+    } else if(/^[0-9]+$/.test(raw)){
+        offset = parseInt(raw, 10);
+    } else {
+        return;
+    }
+
+    if(
+        !Number.isInteger(offset) ||
+        offset < 0 ||
+        offset >= currentMemoryBytes.length
+    ){
+        return;
+    }
+
+    document.querySelectorAll(
+        '.hex-table td.byte.target'
+    ).forEach(
+        element =>
+            element.classList.remove('target')
+    );
+
+    const cell =
+        document.getElementById(
+            'memory-byte-' + offset
+        );
+
+    if(!cell){
+        return;
+    }
+
+    cell.classList.add('target');
+
+    cell.scrollIntoView({
+        behavior:'smooth',
+        block:'center',
+        inline:'center'
+    });
+}
+
+
+document.addEventListener('click', event => {
+    const tool = event.target.closest(
+        '[data-tool="read-memory"]'
+    );
+
+    if(tool){
+        readMemory();
+    }
+});
+
+
+document.addEventListener('keydown', event => {
+    if(
+        event.key === 'Enter' &&
+        document.activeElement ===
+            document.getElementById('memoryOffsetInput')
+    ){
+        goToMemoryOffset();
+    }
+});
+
 
 function show(id){
     document.querySelectorAll('.screen').forEach(
@@ -2151,6 +2851,107 @@ async def safety_check():
         return {
             "success": False,
             "passed": False,
+            "detail": str(error),
+        }
+
+
+
+@app.post("/api/advanced/read-memory")
+async def advanced_read_memory():
+    """
+    Read-only development memory operation.
+
+    Uses a synthetic Jeep EEPROM image so the public preview does not
+    depend on or expose private vehicle dumps.
+    """
+
+    try:
+        profile_path = Path(
+            "vehicles/jeep/wrangler_2012_2018/profile.json"
+        )
+
+        if not profile_path.exists():
+            raise RuntimeError(
+                "Jeep vehicle profile not found."
+            )
+
+        profile = json.loads(
+            profile_path.read_text(encoding="utf-8")
+        )
+
+        expected_size = int(
+            profile["memory"]["size_bytes"]
+        )
+
+        # Synthetic development EEPROM.
+        # No private vehicle/customer data is used here.
+        demo_memory = bytearray(
+            [0xFF] * expected_size
+        )
+
+        # Known development values for the validated Jeep
+        # conversion offsets. These are synthetic test values.
+        demo_memory[0x68] = 0x04
+        demo_memory[0x69] = 0x12
+
+        hardware = SimulatedProgrammer(
+            memory=demo_memory
+        )
+
+        workflow = ConversionWorkflow(
+            hardware,
+            profile,
+        )
+
+        report = workflow.run_safety_check()
+
+        if not report.passed:
+            raise RuntimeError(
+                "Memory read blocked because safety checks failed."
+            )
+
+        memory = hardware.read_memory()
+
+        if len(memory) != expected_size:
+            raise RuntimeError(
+                "Memory size mismatch. "
+                f"Expected {expected_size} bytes, "
+                f"received {len(memory)}."
+            )
+
+        digest = hashlib.sha256(
+            memory
+        ).hexdigest()
+
+        return {
+            "success": True,
+            "read_only": True,
+            "vehicle": "Jeep Wrangler 2012–2018",
+            "memory_type": profile["memory"]["type"],
+            "memory_size": len(memory),
+            "sha256": digest,
+            "cluster_id": hardware.identify_cluster(),
+            "cable": hardware.identify_cable(),
+            "voltage": hardware.measure_voltage(),
+            "current": hardware.measure_current(),
+            "current_validated": False,
+            "data_hex": memory.hex(),
+            "annotations": [
+                {
+                    "offset": 0x68,
+                    "label": "Validated conversion offset 0x68"
+                },
+                {
+                    "offset": 0x69,
+                    "label": "Validated conversion offset 0x69"
+                }
+            ],
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "read_only": True,
             "detail": str(error),
         }
 
