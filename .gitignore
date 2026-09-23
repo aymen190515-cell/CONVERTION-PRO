@@ -10,3 +10,14 @@ data/logs/*
 !data/logs/.gitkeep
 
 *.egg-info/
+
+# Runtime conversion data
+data/backups/
+data/converted/
+
+# Local development backups
+preview_v02_backup.py
+src/convertion_pro/app_v01_backup.py
+
+# Private real EEPROM reference dumps
+tests/fixtures/jeep_wrangler_2012_2018/*.bin

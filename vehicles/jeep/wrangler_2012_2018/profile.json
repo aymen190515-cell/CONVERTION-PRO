@@ -2,10 +2,31 @@
   "make": "Jeep",
   "model": "Wrangler",
   "generation": "2012-2018",
+
   "connection_method": "BENCH",
   "required_cable": "CP-JEEP-004",
+
   "cluster_id": "SIM-JEEP-WRANGLER-2012-2018",
+
   "voltage_min": 11.8,
   "voltage_max": 13.8,
-  "status": "SIMULATION_ONLY"
+
+  "memory": {
+    "type": "EEPROM",
+    "size_bytes": 1024
+  },
+
+  "conversion": {
+    "type": "UNIT_SYSTEM",
+    "km_to_miles": {
+      "0x68": -2,
+      "0x69": -4
+    },
+    "miles_to_km": {
+      "0x68": 2,
+      "0x69": 4
+    }
+  },
+
+  "status": "VALIDATED_CONVERSION_RULE"
 }
