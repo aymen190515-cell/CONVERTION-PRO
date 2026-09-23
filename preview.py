@@ -2421,23 +2421,48 @@ footer{
 
             </div>
 
-            <div
-                class="ident-result"
-                id="identifyResult"
-            >
-                <div>
-                    <small>FINAL RESULT</small>
-                    <strong id="identifyResultText">
-                        WAITING
-                    </strong>
+            <div class="ident-grid" style="margin-top:14px; margin-bottom:0">
+
+                <div
+                    class="ident-result"
+                    id="identifyIdentityResult"
+                    style="margin-top:0"
+                >
+                    <div>
+                        <small>IDENTITY RESULT</small>
+                        <strong id="identifyIdentityResultText">
+                            WAITING
+                        </strong>
+                    </div>
+
+                    <div
+                        class="ident-result-icon"
+                        id="identifyIdentityResultIcon"
+                    >
+                        ·
+                    </div>
                 </div>
 
                 <div
-                    class="ident-result-icon"
-                    id="identifyResultIcon"
+                    class="ident-result"
+                    id="identifySafetyResult"
+                    style="margin-top:0"
                 >
-                    ·
+                    <div>
+                        <small>SAFETY STATUS</small>
+                        <strong id="identifySafetyResultText">
+                            WAITING
+                        </strong>
+                    </div>
+
+                    <div
+                        class="ident-result-icon"
+                        id="identifySafetyResultIcon"
+                    >
+                        ·
+                    </div>
                 </div>
+
             </div>
 
         </div>
@@ -3072,36 +3097,69 @@ async function identifyCluster(){
             data.validation.voltage_valid
         );
 
-        const result =
+        const identityResult =
             document.getElementById(
-                'identifyResult'
+                'identifyIdentityResult'
             );
 
-        const resultText =
+        const identityResultText =
             document.getElementById(
-                'identifyResultText'
+                'identifyIdentityResultText'
             );
 
-        const resultIcon =
+        const identityResultIcon =
             document.getElementById(
-                'identifyResultIcon'
+                'identifyIdentityResultIcon'
             );
 
-        result.classList.remove(
+        identityResult.classList.remove(
             'pass',
             'fail'
         );
 
-        if(data.validation.profile_match){
-            result.classList.add('pass');
-            resultText.textContent =
-                'PROFILE MATCH';
-            resultIcon.textContent = '✓';
+        if(data.validation.identity_match){
+            identityResult.classList.add('pass');
+            identityResultText.textContent =
+                'IDENTITY MATCH';
+            identityResultIcon.textContent = '✓';
         } else {
-            result.classList.add('fail');
-            resultText.textContent =
-                'PROFILE MISMATCH';
-            resultIcon.textContent = '✕';
+            identityResult.classList.add('fail');
+            identityResultText.textContent =
+                'IDENTITY MISMATCH';
+            identityResultIcon.textContent = '✕';
+        }
+
+
+        const safetyResult =
+            document.getElementById(
+                'identifySafetyResult'
+            );
+
+        const safetyResultText =
+            document.getElementById(
+                'identifySafetyResultText'
+            );
+
+        const safetyResultIcon =
+            document.getElementById(
+                'identifySafetyResultIcon'
+            );
+
+        safetyResult.classList.remove(
+            'pass',
+            'fail'
+        );
+
+        if(data.validation.safe_to_continue){
+            safetyResult.classList.add('pass');
+            safetyResultText.textContent =
+                'SAFE TO CONTINUE';
+            safetyResultIcon.textContent = '✓';
+        } else {
+            safetyResult.classList.add('fail');
+            safetyResultText.textContent =
+                'NOT SAFE TO CONTINUE';
+            safetyResultIcon.textContent = '✕';
         }
 
         loading.style.display = 'none';
@@ -3652,9 +3710,13 @@ async def advanced_identify_cluster():
             <= profile["voltage_max"]
         )
 
-        profile_match = (
+        identity_match = (
             cluster_match
             and cable_match
+        )
+
+        safe_to_continue = (
+            identity_match
             and voltage_valid
         )
 
@@ -3694,8 +3756,9 @@ async def advanced_identify_cluster():
             "validation": {
                 "cluster_match": cluster_match,
                 "cable_match": cable_match,
+                "identity_match": identity_match,
                 "voltage_valid": voltage_valid,
-                "profile_match": profile_match,
+                "safe_to_continue": safe_to_continue,
                 "current_validated": False,
             },
 

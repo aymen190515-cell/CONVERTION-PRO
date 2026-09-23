@@ -158,8 +158,9 @@ def test_identify_cluster_matches_selected_profile():
 
     assert validation["cluster_match"] is True
     assert validation["cable_match"] is True
+    assert validation["identity_match"] is True
     assert validation["voltage_valid"] is True
-    assert validation["profile_match"] is True
+    assert validation["safe_to_continue"] is True
 
 
 def test_identify_cluster_returns_profile_information():
@@ -194,3 +195,35 @@ def test_identify_cluster_current_is_monitoring_only():
         payload["validation"]["current_validated"]
         is False
     )
+
+
+
+def test_identity_match_is_separate_from_voltage_safety(
+    monkeypatch,
+):
+    original_programmer = (
+        preview_module.SimulatedProgrammer
+    )
+
+    class LowVoltageProgrammer(
+        original_programmer
+    ):
+        def measure_voltage(self):
+            return 11.2
+
+    monkeypatch.setattr(
+        preview_module,
+        "SimulatedProgrammer",
+        LowVoltageProgrammer,
+    )
+
+    payload = identify_cluster()
+
+    validation = payload["validation"]
+
+    assert validation["cluster_match"] is True
+    assert validation["cable_match"] is True
+    assert validation["identity_match"] is True
+
+    assert validation["voltage_valid"] is False
+    assert validation["safe_to_continue"] is False
