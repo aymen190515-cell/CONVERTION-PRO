@@ -1082,7 +1082,7 @@ footer{
             </ul>
 
             <div class="actions">
-                <button class="primary" onclick="show('safety')">
+                <button class="primary" onclick="runSafetyCheck()">
                     Proceed →
                 </button>
             </div>
@@ -1117,57 +1117,71 @@ footer{
             <div class="check">
                 <span class="check-dot"></span>
                 <span class="check-name">Programmer</span>
-                <span class="check-value">CONNECTED</span>
+                <span class="check-value" id="safetyProgrammer">CHECKING...</span>
             </div>
 
             <div class="check">
                 <span class="check-dot"></span>
                 <span class="check-name">Cable identification</span>
-                <span class="check-value">CP-JEEP-004</span>
+                <span class="check-value" id="safetyCable">CHECKING...</span>
             </div>
 
             <div class="check">
                 <span class="check-dot"></span>
                 <span class="check-name">Supply voltage</span>
-                <span class="check-value">12.1 V</span>
+                <span class="check-value" id="safetyVoltage">CHECKING...</span>
             </div>
 
             <div class="check">
                 <span class="check-dot"></span>
                 <span class="check-name">Current draw</span>
-                <span class="check-value">NORMAL</span>
+                <span class="check-value" id="safetyCurrent">MEASURING...</span>
             </div>
 
             <div class="check">
                 <span class="check-dot"></span>
                 <span class="check-name">Communication</span>
-                <span class="check-value">ACTIVE</span>
+                <span class="check-value" id="safetyCommunication">CHECKING...</span>
             </div>
 
             <div class="check">
                 <span class="check-dot"></span>
                 <span class="check-name">Cluster response</span>
-                <span class="check-value">VALID</span>
+                <span class="check-value" id="safetyCluster">CHECKING...</span>
             </div>
 
             <div class="check">
                 <span class="check-dot"></span>
                 <span class="check-name">Vehicle profile</span>
-                <span class="check-value">MATCHED</span>
+                <span class="check-value" id="safetyProfile">CHECKING...</span>
             </div>
 
         </div>
 
-        <div class="card verified">
-            <div class="verified-icon">✓</div>
-            <h2>Connection Verified</h2>
-            <p class="subtitle">
-                Hardware, cable and cluster profile passed all safety checks.
+        <div class="card verified" id="safetyResultCard">
+            <div class="verified-icon" id="safetyResultIcon">…</div>
+            <h2 id="safetyResultTitle">Checking Connection</h2>
+            <p class="subtitle" id="safetyResultText">
+                Reading programmer, cable, power and cluster response.
             </p>
 
             <div class="actions">
-                <button class="primary" onclick="show('ready')">
+                <button
+                    class="primary"
+                    id="safetyContinue"
+                    onclick="show('ready')"
+                    disabled
+                >
                     Continue →
+                </button>
+
+                <button
+                    class="secondary"
+                    id="safetyRetry"
+                    onclick="runSafetyCheck()"
+                    style="display:none"
+                >
+                    Retry
                 </button>
             </div>
         </div>
@@ -1199,7 +1213,7 @@ footer{
             <div class="cluster-art">
                 <div class="cluster-screen">
                     CONNECTED<br>
-                    12.1 V
+                    <span id="readyClusterVoltage">--.- V</span>
                 </div>
             </div>
         </div>
@@ -1219,17 +1233,17 @@ footer{
 
                 <div class="metric">
                     <small>CABLE</small>
-                    <strong>CP-JEEP-004</strong>
+                    <strong id="readyCable">---</strong>
                 </div>
 
                 <div class="metric">
                     <small>VOLTAGE</small>
-                    <strong class="green">12.1 V</strong>
+                    <strong class="green" id="readyVoltage">--.- V</strong>
                 </div>
 
                 <div class="metric">
                     <small>COMMUNICATION</small>
-                    <strong class="green">ACTIVE</strong>
+                    <strong class="green" id="readyCommunication">---</strong>
                 </div>
 
             </div>
@@ -1285,17 +1299,17 @@ footer{
 
     <div class="card confirm-card">
 
-        <div class="eyebrow">CONVERSION DETECTED</div>
+        <div class="eyebrow">CONVERSION REQUEST</div>
         <h1>Confirm Conversion</h1>
 
         <p class="subtitle">
-            The cluster's current unit configuration was detected automatically.
+            Review the selected conversion before programming the cluster.
         </p>
 
         <div class="direction">
 
             <div class="unit-card">
-                <small>CURRENT</small>
+                <small>SOURCE</small>
                 <strong>KM / KMH</strong>
             </div>
 
@@ -1525,7 +1539,7 @@ footer{
     <div class="footer-right">
         <span>SN CP-001234</span>
         <span>SIMULATOR</span>
-        <span>V0.2</span>
+        <span>V0.3</span>
     </div>
 
 </footer>
@@ -1540,6 +1554,153 @@ function show(id){
 
     document.getElementById(id).classList.add('active');
     window.scrollTo({top:0,behavior:'smooth'});
+}
+
+
+async function runSafetyCheck(){
+    show('safety');
+
+    const fields = {
+        programmer: document.getElementById('safetyProgrammer'),
+        cable: document.getElementById('safetyCable'),
+        voltage: document.getElementById('safetyVoltage'),
+        current: document.getElementById('safetyCurrent'),
+        communication: document.getElementById('safetyCommunication'),
+        cluster: document.getElementById('safetyCluster'),
+        profile: document.getElementById('safetyProfile')
+    };
+
+    const continueButton =
+        document.getElementById('safetyContinue');
+
+    const retryButton =
+        document.getElementById('safetyRetry');
+
+    const icon =
+        document.getElementById('safetyResultIcon');
+
+    const title =
+        document.getElementById('safetyResultTitle');
+
+    const message =
+        document.getElementById('safetyResultText');
+
+    Object.values(fields).forEach(field => {
+        field.textContent = 'CHECKING...';
+    });
+
+    fields.current.textContent = 'MEASURING...';
+
+    continueButton.disabled = true;
+    retryButton.style.display = 'none';
+
+    icon.textContent = '…';
+    title.textContent = 'Checking Connection';
+    message.textContent =
+        'Reading programmer, cable, power and cluster response.';
+
+    try {
+        const response = await fetch('/api/safety', {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if(!response.ok || !data.success){
+            throw new Error(
+                data.detail ||
+                'Safety check could not be completed.'
+            );
+        }
+
+        fields.programmer.textContent =
+            data.checks.programmer
+                ? 'CONNECTED'
+                : 'NOT DETECTED';
+
+        fields.cable.textContent =
+            data.cable_detected || 'NOT DETECTED';
+
+        fields.voltage.textContent =
+            Number(data.voltage).toFixed(1) + ' V';
+
+        fields.current.textContent =
+            Number(data.current).toFixed(2) + ' A';
+
+        fields.communication.textContent =
+            data.checks.communication
+                ? 'ACTIVE'
+                : 'FAILED';
+
+        fields.cluster.textContent =
+            data.cluster_detected || 'NO RESPONSE';
+
+        fields.profile.textContent =
+            data.checks.profile
+                ? 'MATCHED'
+                : 'MISMATCH';
+
+        /*
+           Carry the verified Safety Gate telemetry into
+           the Cluster Ready screen.
+        */
+        document.getElementById(
+            'readyClusterVoltage'
+        ).textContent =
+            Number(data.voltage).toFixed(1) + ' V';
+
+        document.getElementById(
+            'readyVoltage'
+        ).textContent =
+            Number(data.voltage).toFixed(1) + ' V';
+
+        document.getElementById(
+            'readyCable'
+        ).textContent =
+            data.cable_detected || 'NOT DETECTED';
+
+        document.getElementById(
+            'readyCommunication'
+        ).textContent =
+            data.checks.communication
+                ? 'ACTIVE'
+                : 'FAILED';
+
+        if(data.passed){
+            icon.textContent = '✓';
+            title.textContent = 'Connection Verified';
+            message.textContent =
+                'Hardware, cable and cluster profile passed all required safety checks.';
+
+            continueButton.disabled = false;
+            retryButton.style.display = 'none';
+        } else {
+            icon.textContent = '!';
+            title.textContent = 'Programming Locked';
+            message.textContent =
+                data.failure_reason ||
+                'One or more required safety checks failed.';
+
+            continueButton.disabled = true;
+            retryButton.style.display = '';
+        }
+
+    } catch(error) {
+        fields.programmer.textContent = 'ERROR';
+        fields.cable.textContent = 'ERROR';
+        fields.voltage.textContent = 'ERROR';
+        fields.current.textContent = 'ERROR';
+        fields.communication.textContent = 'ERROR';
+        fields.cluster.textContent = 'ERROR';
+        fields.profile.textContent = 'ERROR';
+
+        icon.textContent = '!';
+        title.textContent = 'Safety Check Failed';
+        message.textContent = error.message;
+
+        continueButton.disabled = true;
+        retryButton.style.display = '';
+    }
 }
 
 function startAnalysis(){
@@ -1560,11 +1721,11 @@ function startAnalysis(){
         if(p < 30)
             text.textContent = 'Identifying cluster hardware...';
         else if(p < 55)
-            text.textContent = 'Reading unit configuration...';
+            text.textContent = 'Reading cluster memory...';
         else if(p < 80)
             text.textContent = 'Validating vehicle profile...';
         else
-            text.textContent = 'Preparing conversion...';
+            text.textContent = 'Preparing selected conversion...';
 
         if(p >= 100){
             clearInterval(timer);
@@ -1744,6 +1905,112 @@ async function startProgramming(){
 class ConversionRequest(BaseModel):
     source_unit: str
     target_unit: str
+
+
+
+@app.post("/api/safety")
+async def safety_check():
+    """
+    Development safety gate using the current vehicle profile
+    and simulated programmer.
+
+    Current draw is reported as telemetry only until a validated
+    acceptable current range exists in the vehicle profile.
+    """
+
+    try:
+        profile_path = Path(
+            "vehicles/jeep/wrangler_2012_2018/profile.json"
+        )
+
+        if not profile_path.exists():
+            raise RuntimeError(
+                "Jeep vehicle profile not found."
+            )
+
+        profile = json.loads(
+            profile_path.read_text(
+                encoding="utf-8"
+            )
+        )
+
+        hardware = SimulatedProgrammer()
+
+        workflow = ConversionWorkflow(
+            hardware,
+            profile,
+        )
+
+        report = workflow.run_safety_check()
+
+        voltage = hardware.measure_voltage()
+        current = hardware.measure_current()
+        cable_detected = hardware.identify_cable()
+        cluster_detected = hardware.identify_cluster()
+
+        failure_reasons = []
+
+        if not report.programmer:
+            failure_reasons.append(
+                "Programmer not detected."
+            )
+
+        if not report.cable:
+            failure_reasons.append(
+                "Incorrect cable. Expected "
+                + str(profile["required_cable"])
+                + "."
+            )
+
+        if not report.voltage:
+            failure_reasons.append(
+                "Supply voltage outside allowed range "
+                + str(profile["voltage_min"])
+                + "–"
+                + str(profile["voltage_max"])
+                + " V."
+            )
+
+        if not report.communication:
+            failure_reasons.append(
+                "No communication with cluster."
+            )
+
+        if not report.profile:
+            failure_reasons.append(
+                "Connected cluster does not match selected vehicle profile."
+            )
+
+        return {
+            "success": True,
+            "passed": report.passed,
+            "checks": {
+                "programmer": report.programmer,
+                "cable": report.cable,
+                "voltage": report.voltage,
+                "communication": report.communication,
+                "profile": report.profile,
+            },
+            "expected_cable": profile["required_cable"],
+            "cable_detected": cable_detected,
+            "voltage": voltage,
+            "voltage_min": profile["voltage_min"],
+            "voltage_max": profile["voltage_max"],
+            "current": current,
+            "current_validated": False,
+            "cluster_detected": cluster_detected,
+            "expected_cluster": profile["cluster_id"],
+            "failure_reason": " ".join(
+                failure_reasons
+            ),
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "passed": False,
+            "detail": str(error),
+        }
 
 
 @app.post("/api/convert")
