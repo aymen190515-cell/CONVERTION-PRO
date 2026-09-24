@@ -10,6 +10,10 @@ from convertion_pro.core.workflow import ConversionWorkflow
 from convertion_pro.core.memory_layout import (
     detect_memory_organization,
 )
+
+from convertion_pro.core.toyota_rh850 import (
+    convert_region as convert_toyota_region,
+)
 from convertion_pro.hardware.simulator import SimulatedProgrammer
 
 app = FastAPI(title="CONVERTION-PRO Preview")
@@ -2160,15 +2164,29 @@ footer{
 
             <div>
                 <label>MAKE</label>
-                <select>
-                    <option>Jeep</option>
+                <select
+                    id="vehicleMake"
+                    onchange="updateVehicleModels()"
+                >
+                    <option value="jeep">
+                        Jeep
+                    </option>
+
+                    <option value="toyota">
+                        Toyota
+                    </option>
                 </select>
             </div>
 
             <div>
                 <label>MODEL / GENERATION</label>
-                <select>
-                    <option>Wrangler 2012–2018</option>
+                <select
+                    id="vehicleModel"
+                    onchange="updateSelectedVehicle()"
+                >
+                    <option value="jeep_wrangler_2012_2018">
+                        Wrangler 2012–2018
+                    </option>
                 </select>
             </div>
 
@@ -2314,16 +2332,24 @@ footer{
 
             </div>
 
-            <div class="file-profile-note">
-                <strong>
+            <div
+                id="fileVehicleProfile"
+                class="file-profile-note"
+            >
+                <strong id="fileVehicleProfileName">
                     Jeep Wrangler 2012–2018
                 </strong><br>
-                Vehicle profile: USER SELECTED.
-                File size compatibility does not
-                automatically identify the vehicle.
+                <span id="fileVehicleProfileText">
+                    Vehicle profile: USER SELECTED.
+                    File size compatibility does not
+                    automatically identify the vehicle.
+                </span>
             </div>
 
-            <div class="file-direction">
+            <div
+                id="fileOrganizationSection"
+                class="file-direction"
+            >
 
                 <label>
                     MEMORY ORGANIZATION
@@ -4443,6 +4469,218 @@ document.addEventListener('click', event => {
 
 
 
+
+const VEHICLE_CATALOG = {
+    jeep: [
+        {
+            key: "jeep_wrangler_2012_2018",
+            label: "Wrangler 2012–2018",
+            fileLabel: "Jeep Wrangler 2012–2018",
+            conversionType: "UNIT",
+            source: "KM",
+            target: "MI"
+        }
+    ],
+
+    toyota: [
+        {
+            key: "toyota_tundra_gas",
+            label: "Tundra Gas",
+            fileLabel: "Toyota Tundra Gas",
+            conversionType: "REGION",
+            modelKey: "tundra_gas"
+        },
+        {
+            key: "toyota_tundra_hybrid",
+            label: "Tundra Hybrid",
+            fileLabel: "Toyota Tundra Hybrid",
+            conversionType: "REGION",
+            modelKey: "tundra_hybrid"
+        },
+        {
+            key: "toyota_venza_hybrid",
+            label: "Venza Hybrid",
+            fileLabel: "Toyota Venza Hybrid",
+            conversionType: "REGION",
+            modelKey: "venza_hybrid"
+        },
+        {
+            key: "toyota_highlander_limited",
+            label: "Highlander Limited",
+            fileLabel: "Toyota Highlander Limited",
+            conversionType: "REGION",
+            modelKey: "highlander_limited"
+        },
+        {
+            key: "toyota_grand_highlander",
+            label: "Grand Highlander",
+            fileLabel: "Toyota Grand Highlander",
+            conversionType: "REGION",
+            modelKey: "grand_highlander"
+        },
+        {
+            key: "toyota_sequoia_hybrid",
+            label: "Sequoia Hybrid",
+            fileLabel: "Toyota Sequoia Hybrid",
+            conversionType: "REGION",
+            modelKey: "sequoia_hybrid"
+        },
+        {
+            key: "toyota_corolla",
+            label: "Corolla",
+            fileLabel: "Toyota Corolla",
+            conversionType: "REGION",
+            modelKey: "corolla"
+        },
+        {
+            key: "toyota_sienna",
+            label: "Sienna",
+            fileLabel: "Toyota Sienna",
+            conversionType: "REGION",
+            modelKey: "sienna"
+        },
+        {
+            key: "toyota_crown_signia",
+            label: "Crown Signia",
+            fileLabel: "Toyota Crown Signia",
+            conversionType: "REGION",
+            modelKey: "crown_signia"
+        },
+        {
+            key: "toyota_rav4",
+            label: "RAV4",
+            fileLabel: "Toyota RAV4",
+            conversionType: "REGION",
+            modelKey: "rav4"
+        }
+    ]
+};
+
+let selectedVehicle = VEHICLE_CATALOG.jeep[0];
+
+
+function updateVehicleModels(){
+    const make = document.getElementById(
+        "vehicleMake"
+    ).value;
+
+    const modelSelect = document.getElementById(
+        "vehicleModel"
+    );
+
+    const models = VEHICLE_CATALOG[make] || [];
+
+    modelSelect.innerHTML = "";
+
+    for(const vehicle of models){
+        const option = document.createElement(
+            "option"
+        );
+
+        option.value = vehicle.key;
+        option.textContent = vehicle.label;
+
+        modelSelect.appendChild(option);
+    }
+
+    updateSelectedVehicle();
+}
+
+
+function updateSelectedVehicle(){
+    const make = document.getElementById(
+        "vehicleMake"
+    ).value;
+
+    const key = document.getElementById(
+        "vehicleModel"
+    ).value;
+
+    selectedVehicle = (
+        VEHICLE_CATALOG[make] || []
+    ).find(
+        vehicle => vehicle.key === key
+    );
+
+    if(!selectedVehicle){
+        selectedVehicle =
+            VEHICLE_CATALOG.jeep[0];
+    }
+}
+
+
+function configureFileWorkspaceForVehicle(){
+    const profileName = document.getElementById(
+        "fileVehicleProfileName"
+    );
+
+    const profileText = document.getElementById(
+        "fileVehicleProfileText"
+    );
+
+    const organizationSection =
+        document.getElementById(
+            "fileOrganizationSection"
+        );
+
+    const kmMiles = document.getElementById(
+        "fileKmToMiles"
+    );
+
+    const milesKm = document.getElementById(
+        "fileMilesToKm"
+    );
+
+    profileName.textContent =
+        selectedVehicle.fileLabel;
+
+    if(
+        selectedVehicle.conversionType ===
+        "REGION"
+    ){
+        profileText.textContent =
+            "Vehicle profile: USER SELECTED. " +
+            "RH850 variant will be validated " +
+            "against known memory values.";
+
+        organizationSection.style.display =
+            "none";
+
+        kmMiles.textContent =
+            "CANADA → USA";
+
+        milesKm.textContent =
+            "USA → CANADA";
+
+        fileSourceUnit = "CANADA";
+        fileTargetUnit = "USA";
+
+        kmMiles.classList.add("active");
+        milesKm.classList.remove("active");
+
+    }else{
+        profileText.textContent =
+            "Vehicle profile: USER SELECTED. " +
+            "File size compatibility does not " +
+            "automatically identify the vehicle.";
+
+        organizationSection.style.display =
+            "";
+
+        kmMiles.textContent =
+            "KM → MILES";
+
+        milesKm.textContent =
+            "MILES → KM";
+
+        fileSourceUnit = "KM";
+        fileTargetUnit = "MI";
+
+        kmMiles.classList.add("active");
+        milesKm.classList.remove("active");
+    }
+}
+
 let selectedMemoryFile = null;
 let fileSourceUnit = "KM";
 let fileTargetUnit = "MI";
@@ -4452,6 +4690,7 @@ let convertedFileBytes = null;
 let convertedFileName = null;
 
 function openFileConversion(){
+    updateSelectedVehicle();
     selectedMemoryFile = null;
     convertedFileBytes = null;
     convertedFileName = null;
@@ -4472,7 +4711,14 @@ function openFileConversion(){
         "fileConvertError"
     ).classList.remove("visible");
 
-    setFileDirection("KM", "MI");
+    configureFileWorkspaceForVehicle();
+
+    if(
+        selectedVehicle.conversionType ===
+        "UNIT"
+    ){
+        setFileDirection("KM", "MI");
+    }
 
     fileMemoryOrganization = "AUTO";
     fileDetectedOrganization = null;
@@ -4776,6 +5022,19 @@ async function detectSelectedFileOrganization(file){
 
 
 function setFileDirection(source, target){
+    if(
+        selectedVehicle.conversionType ===
+        "REGION"
+    ){
+        if(source === "KM"){
+            source = "CANADA";
+            target = "USA";
+        }else if(source === "MI"){
+            source = "USA";
+            target = "CANADA";
+        }
+    }
+
     fileSourceUnit = source;
     fileTargetUnit = target;
 
@@ -4848,7 +5107,10 @@ async function convertSelectedFile(){
         return;
     }
 
-    if(selectedMemoryFile.size !== 1024){
+    if(
+        selectedVehicle.conversionType === "UNIT" &&
+        selectedMemoryFile.size !== 1024
+    ){
         showFileError(
             "File size does not match the selected " +
             "Jeep Wrangler profile. Expected 1024 bytes."
@@ -4858,6 +5120,7 @@ async function convertSelectedFile(){
 
 
     if(
+        selectedVehicle.conversionType === "UNIT" &&
         fileMemoryOrganization === "AUTO" &&
         !fileDetectedOrganization
     ){
@@ -4900,6 +5163,10 @@ async function convertSelectedFile(){
             "&memory_organization=" +
             encodeURIComponent(
                 fileMemoryOrganization
+            ) +
+            "&vehicle_key=" +
+            encodeURIComponent(
+                selectedVehicle.key
             );
 
         const response = await fetch(url, {
@@ -5131,24 +5398,43 @@ document.addEventListener(
             "fileStatus"
         );
 
-        if(file.size === 1024){
-            status.textContent = "SIZE VALID ✓";
-            status.style.color =
-                "var(--green)";
+        if(
+            selectedVehicle.conversionType ===
+            "UNIT"
+        ){
+            if(file.size === 1024){
+                status.textContent =
+                    "SIZE VALID ✓";
+
+                status.style.color =
+                    "var(--green)";
+            }else{
+                status.textContent =
+                    "SIZE INVALID ✕";
+
+                status.style.color =
+                    "var(--red)";
+            }
         }else{
             status.textContent =
-                "SIZE INVALID ✕";
+                "SIZE ACCEPTED ✓";
+
             status.style.color =
-                "var(--red)";
+                "var(--green)";
         }
 
         document.getElementById(
             "fileDetails"
         ).classList.add("visible");
 
-        await detectSelectedFileOrganization(
-            file
-        );
+        if(
+            selectedVehicle.conversionType ===
+            "UNIT"
+        ){
+            await detectSelectedFileOrganization(
+                file
+            );
+        }
     }
 );
 
@@ -5525,6 +5811,147 @@ async def safety_check():
     """
 
     try:
+        original_data = await request.body()
+
+        if not original_data:
+            raise RuntimeError(
+                "Uploaded file is empty."
+            )
+
+        toyota_models = {
+            "toyota_tundra_gas": "tundra_gas",
+            "toyota_tundra_hybrid": "tundra_hybrid",
+            "toyota_venza_hybrid": "venza_hybrid",
+            "toyota_highlander_limited":
+                "highlander_limited",
+            "toyota_grand_highlander":
+                "grand_highlander",
+            "toyota_sequoia_hybrid":
+                "sequoia_hybrid",
+            "toyota_corolla": "corolla",
+            "toyota_sienna": "sienna",
+            "toyota_crown_signia": "crown_signia",
+            "toyota_rav4": "rav4",
+        }
+
+        if vehicle_key in toyota_models:
+            model_key = toyota_models[
+                vehicle_key
+            ]
+
+            converted_data, variant = (
+                convert_toyota_region(
+                    original_data,
+                    model_key,
+                    source_unit,
+                    target_unit,
+                )
+            )
+
+            changes = []
+
+            for offset, (
+                before,
+                after,
+            ) in enumerate(
+                zip(
+                    original_data,
+                    converted_data,
+                )
+            ):
+                if before != after:
+                    changes.append({
+                        "offset": offset,
+                        "offset_hex":
+                            f"0x{offset:X}",
+                        "before": before,
+                        "after": after,
+                        "before_hex":
+                            f"{before:02X}",
+                        "after_hex":
+                            f"{after:02X}",
+                    })
+
+            if not changes:
+                raise RuntimeError(
+                    "Toyota conversion produced "
+                    "no memory changes."
+                )
+
+            if len(converted_data) != len(
+                original_data
+            ):
+                raise RuntimeError(
+                    "Converted file size changed."
+                )
+
+            suffix = (
+                "usa"
+                if target_unit.upper()
+                == "USA"
+                else "canada"
+            )
+
+            safe_model = model_key.replace(
+                " ",
+                "_",
+            )
+
+            return {
+                "success": True,
+                "verified": True,
+                "source": "FILE",
+                "physical_cluster_required": False,
+                "hardware_access": False,
+                "profile_source": "USER_SELECTED",
+                "vehicle": {
+                    "make": "Toyota",
+                    "model": variant.name,
+                    "generation": "",
+                },
+                "variant": variant.name,
+                "processor":
+                    "RH850 R7F701401",
+                "memory_organization": "RH850",
+                "organization_source":
+                    "PROCESSOR_PROFILE",
+                "detection_confidence":
+                    "EXACT_VALUE_MATCH",
+                "memory_type":
+                    "PROCESSOR MEMORY",
+                "memory_size":
+                    len(original_data),
+                "source_unit":
+                    source_unit.upper(),
+                "target_unit":
+                    target_unit.upper(),
+                "original_sha256":
+                    hashlib.sha256(
+                        original_data
+                    ).hexdigest(),
+                "converted_sha256":
+                    hashlib.sha256(
+                        converted_data
+                    ).hexdigest(),
+                "changes": changes,
+                "changed_byte_count":
+                    len(changes),
+                "converted_filename": (
+                    f"toyota_{safe_model}_"
+                    f"{suffix}.bin"
+                ),
+                "data_hex":
+                    converted_data.hex(),
+            }
+
+        if (
+            vehicle_key !=
+            "jeep_wrangler_2012_2018"
+        ):
+            raise RuntimeError(
+                "Unsupported vehicle profile."
+            )
+
         profile_path = Path(
             "vehicles/jeep/wrangler_2012_2018/profile.json"
         )
@@ -6187,6 +6614,7 @@ async def convert_file(
     source_unit: str,
     target_unit: str,
     memory_organization: str = "AUTO",
+    vehicle_key: str = "jeep_wrangler_2012_2018",
 ):
     """
     Convert an uploaded EEPROM image entirely in memory.
@@ -6196,6 +6624,142 @@ async def convert_file(
     """
 
     try:
+        original_data = await request.body()
+
+        if not original_data:
+            raise RuntimeError(
+                "Uploaded file is empty."
+            )
+
+        toyota_models = {
+            "toyota_tundra_gas": "tundra_gas",
+            "toyota_tundra_hybrid": "tundra_hybrid",
+            "toyota_venza_hybrid": "venza_hybrid",
+            "toyota_highlander_limited":
+                "highlander_limited",
+            "toyota_grand_highlander":
+                "grand_highlander",
+            "toyota_sequoia_hybrid":
+                "sequoia_hybrid",
+            "toyota_corolla": "corolla",
+            "toyota_sienna": "sienna",
+            "toyota_crown_signia": "crown_signia",
+            "toyota_rav4": "rav4",
+        }
+
+        if vehicle_key in toyota_models:
+            model_key = toyota_models[
+                vehicle_key
+            ]
+
+            converted_data, variant = (
+                convert_toyota_region(
+                    original_data,
+                    model_key,
+                    source_unit,
+                    target_unit,
+                )
+            )
+
+            changes = []
+
+            for offset, (
+                before,
+                after,
+            ) in enumerate(
+                zip(
+                    original_data,
+                    converted_data,
+                )
+            ):
+                if before != after:
+                    changes.append({
+                        "offset": offset,
+                        "offset_hex":
+                            f"0x{offset:X}",
+                        "before": before,
+                        "after": after,
+                        "before_hex":
+                            f"{before:02X}",
+                        "after_hex":
+                            f"{after:02X}",
+                    })
+
+            if not changes:
+                raise RuntimeError(
+                    "Toyota conversion produced "
+                    "no memory changes."
+                )
+
+            if len(converted_data) != len(
+                original_data
+            ):
+                raise RuntimeError(
+                    "Converted file size changed."
+                )
+
+            suffix = (
+                "usa"
+                if target_unit.upper()
+                == "USA"
+                else "canada"
+            )
+
+            return {
+                "success": True,
+                "verified": True,
+                "source": "FILE",
+                "physical_cluster_required": False,
+                "hardware_access": False,
+                "profile_source": "USER_SELECTED",
+                "memory_organization": "RH850",
+                "organization_source":
+                    "PROCESSOR_PROFILE",
+                "detection_confidence":
+                    "EXACT_VALUE_MATCH",
+                "vehicle": {
+                    "make": "Toyota",
+                    "model": variant.name,
+                    "generation": "",
+                },
+                "variant": variant.name,
+                "processor":
+                    "RH850 R7F701401",
+                "memory_type":
+                    "PROCESSOR MEMORY",
+                "memory_size":
+                    len(original_data),
+                "source_unit":
+                    source_unit.upper(),
+                "target_unit":
+                    target_unit.upper(),
+                "original_sha256":
+                    hashlib.sha256(
+                        original_data
+                    ).hexdigest(),
+                "converted_sha256":
+                    hashlib.sha256(
+                        converted_data
+                    ).hexdigest(),
+                "changes": changes,
+                "changed_byte_count":
+                    len(changes),
+                "converted_filename": (
+                    f"toyota_{model_key}_"
+                    f"{suffix}.bin"
+                ),
+                "data_hex":
+                    converted_data.hex(),
+            }
+
+        if (
+            vehicle_key !=
+            "jeep_wrangler_2012_2018"
+        ):
+            raise RuntimeError(
+                "Unsupported vehicle profile."
+            )
+
         profile_path = Path(
             "vehicles/jeep/wrangler_2012_2018/profile.json"
         )
@@ -6210,13 +6774,6 @@ async def convert_file(
                 encoding="utf-8"
             )
         )
-
-        original_data = await request.body()
-
-        if not original_data:
-            raise RuntimeError(
-                "Uploaded file is empty."
-            )
 
         expected_size = int(
             profile["memory"]["size_bytes"]

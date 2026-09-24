@@ -381,3 +381,153 @@ def test_file_convert_auto_refuses_ambiguous():
         "could not be detected"
         in data["detail"]
     )
+
+
+def make_toyota_memory(
+    size: int,
+    values: dict[int, int],
+) -> bytes:
+    data = bytearray([0xFF] * size)
+
+    for offset, value in values.items():
+        data[offset] = value
+
+    return bytes(data)
+
+
+def convert_toyota(
+    body: bytes,
+    vehicle_key: str,
+    source: str = "CANADA",
+    target: str = "USA",
+):
+    return client.post(
+        "/api/file/convert",
+        params={
+            "source_unit": source,
+            "target_unit": target,
+            "memory_organization": "AUTO",
+            "vehicle_key": vehicle_key,
+        },
+        content=body,
+        headers={
+            "Content-Type":
+                "application/octet-stream"
+        },
+    )
+
+
+def test_toyota_rav4_api_conversion():
+    original = make_toyota_memory(
+        0x585,
+        {
+            0x502: 0xBF,
+            0x504: 0x05,
+            0x542: 0xC0,
+            0x544: 0x05,
+            0x582: 0xC1,
+            0x584: 0x05,
+        },
+    )
+
+    response = convert_toyota(
+        original,
+        "toyota_rav4",
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["success"] is True
+    assert data["verified"] is True
+    assert data["hardware_access"] is False
+    assert data["vehicle"]["make"] == "Toyota"
+    assert data["vehicle"]["model"] == "RAV4"
+    assert data["processor"] == "RH850 R7F701401"
+    assert data["changed_byte_count"] == 6
+
+    offsets = {
+        item["offset"]
+        for item in data["changes"]
+    }
+
+    assert offsets == {
+        0x502,
+        0x504,
+        0x542,
+        0x544,
+        0x582,
+        0x584,
+    }
+
+
+def test_toyota_tundra_gas_api_conversion():
+    original = make_toyota_memory(
+        0xC05,
+        {
+            0xB82: 0xDC,
+            0xB84: 0x05,
+            0xBC2: 0xDD,
+            0xBC4: 0x05,
+            0xC02: 0xDE,
+            0xC04: 0x05,
+        },
+    )
+
+    response = convert_toyota(
+        original,
+        "toyota_tundra_gas",
+    )
+
+    data = response.json()
+
+    assert data["success"] is True
+    assert data["vehicle"]["model"] == "Tundra Gas"
+    assert data["changed_byte_count"] == 6
+
+
+def test_toyota_highlander_variant_auto_detect():
+    original = make_toyota_memory(
+        0x7C05,
+        {
+            0x7B82: 0xA0,
+            0x7B84: 0x08,
+            0x7BC2: 0xA1,
+            0x7BC4: 0x08,
+            0x7C02: 0xA2,
+            0x7C04: 0x08,
+        },
+    )
+
+    response = convert_toyota(
+        original,
+        "toyota_highlander_limited",
+    )
+
+    data = response.json()
+
+    assert data["success"] is True
+    assert (
+        data["variant"]
+        == "Highlander Limited Variant C"
+    )
+
+
+def test_toyota_rejects_wrong_model_values():
+    original = bytes([0xFF] * 0xC05)
+
+    response = convert_toyota(
+        original,
+        "toyota_tundra_gas",
+    )
+
+    data = response.json()
+
+    assert data["success"] is False
+    assert data["verified"] is False
+
+    assert (
+        "No validated Toyota variant matches"
+        in data["detail"]
+    )
