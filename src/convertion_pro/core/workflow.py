@@ -8,6 +8,11 @@ from convertion_pro.core.jeep_wrangler import (
     convert_miles_to_km,
 )
 
+from convertion_pro.core.memory_layout import (
+    to_canonical_x16,
+    from_canonical_x16,
+)
+
 
 @dataclass
 class SafetyReport:
@@ -203,6 +208,144 @@ class ConversionWorkflow:
             "No validated conversion algorithm "
             "is available for this vehicle profile."
         )
+
+
+    def convert_file_data(
+        self,
+        original_data: bytes,
+        source_unit: str,
+        target_unit: str,
+        memory_organization: str = "X16",
+    ) -> bytes:
+        """
+        Convert an already-read memory image.
+
+        This path performs no hardware access and no write.
+        The selected vehicle profile is supplied by the user.
+        """
+
+        if not original_data:
+            raise RuntimeError(
+                "Cannot convert an empty file."
+            )
+
+        expected_size = (
+            self.profile
+            .get("memory", {})
+            .get("size_bytes")
+        )
+
+        if (
+            expected_size is not None
+            and len(original_data) != expected_size
+        ):
+            raise RuntimeError(
+                "EEPROM size does not match vehicle profile. "
+                f"Expected {expected_size} bytes, "
+                f"received {len(original_data)} bytes."
+            )
+
+        source_unit = source_unit.upper()
+        target_unit = target_unit.upper()
+
+        canonical_data = to_canonical_x16(
+            original_data,
+            memory_organization,
+        )
+
+        if source_unit == target_unit:
+            raise ValueError(
+                "Source and target units are identical."
+            )
+
+        supported = {"KM", "MI"}
+
+        if (
+            source_unit not in supported
+            or target_unit not in supported
+        ):
+            raise ValueError(
+                "Unsupported unit conversion."
+            )
+
+        make = self.profile.get("make")
+        model = self.profile.get("model")
+        generation = self.profile.get(
+            "generation"
+        )
+
+        if (
+            make == "Jeep"
+            and model == "Wrangler"
+            and generation == "2012-2018"
+        ):
+            if (
+                source_unit == "KM"
+                and target_unit == "MI"
+            ):
+                converted = convert_km_to_miles(
+                    canonical_data
+                )
+
+            elif (
+                source_unit == "MI"
+                and target_unit == "KM"
+            ):
+                converted = convert_miles_to_km(
+                    canonical_data
+                )
+
+            else:
+                raise RuntimeError(
+                    "Unsupported conversion direction."
+                )
+
+        else:
+            raise RuntimeError(
+                "No validated conversion algorithm "
+                "is available for this vehicle profile."
+            )
+
+        converted = from_canonical_x16(
+            converted,
+            memory_organization,
+        )
+
+        if len(converted) != len(original_data):
+            raise RuntimeError(
+                "Converted EEPROM size changed."
+            )
+
+        allowed_offsets = {0x68, 0x69}
+
+        changed_offsets = {
+            index
+            for index, (before, after)
+            in enumerate(
+                zip(original_data, converted)
+            )
+            if before != after
+        }
+
+        unexpected_offsets = (
+            changed_offsets - allowed_offsets
+        )
+
+        if unexpected_offsets:
+            formatted = ", ".join(
+                f"0x{offset:X}"
+                for offset in sorted(
+                    unexpected_offsets
+                )
+            )
+
+            raise RuntimeError(
+                "Conversion modified unexpected "
+                f"offsets: {formatted}."
+            )
+
+        return converted
+
 
     def program_and_verify(
         self,

@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from pathlib import Path
@@ -7,6 +7,9 @@ import json
 import uvicorn
 
 from convertion_pro.core.workflow import ConversionWorkflow
+from convertion_pro.core.memory_layout import (
+    detect_memory_organization,
+)
 from convertion_pro.hardware.simulator import SimulatedProgrammer
 
 app = FastAPI(title="CONVERTION-PRO Preview")
@@ -373,6 +376,324 @@ button.danger{
 }
 
 .recent strong{font-size:13px}
+
+
+/* FILE CONVERSION */
+
+.file-open-button{
+    background:transparent;
+    color:#a9b8c9;
+    border:1px solid #2b3d50;
+    border-radius:8px;
+    padding:10px 16px;
+    font-weight:750;
+    cursor:pointer;
+}
+
+.file-open-button:hover{
+    color:#fff;
+    border-color:#4a6d91;
+    background:#0d1722;
+}
+
+.file-source-card{
+    max-width:920px;
+    margin:0 auto;
+}
+
+.file-drop-zone{
+    border:1px dashed #35516d;
+    background:#09111a;
+    border-radius:12px;
+    padding:34px 24px;
+    text-align:center;
+    cursor:pointer;
+    transition:.15s ease;
+}
+
+.file-drop-zone:hover{
+    border-color:#1687ff;
+    background:#0b1622;
+}
+
+.file-drop-zone strong{
+    display:block;
+    font-size:16px;
+    margin-bottom:6px;
+}
+
+.file-drop-zone span{
+    color:#78899c;
+    font-size:12px;
+}
+
+.file-details{
+    display:none;
+    margin-top:18px;
+}
+
+.file-details.visible{
+    display:block;
+}
+
+.file-info-grid{
+    display:grid;
+    grid-template-columns:1.4fr .7fr .7fr;
+    gap:10px;
+}
+
+.file-info-box{
+    border:1px solid #1f3041;
+    background:#09111a;
+    border-radius:9px;
+    padding:14px;
+}
+
+.file-info-box small{
+    display:block;
+    color:#687a8e;
+    font-size:9px;
+    font-weight:850;
+    letter-spacing:.7px;
+    margin-bottom:6px;
+}
+
+.file-info-box strong{
+    font-size:12px;
+}
+
+.file-profile-note{
+    margin-top:12px;
+    padding:12px 14px;
+    border:1px solid #24384c;
+    background:#0a131d;
+    border-radius:8px;
+    color:#8293a6;
+    font-size:11px;
+    line-height:1.5;
+}
+
+.file-direction{
+    margin-top:22px;
+}
+
+.file-direction label{
+    display:block;
+    color:#8190a2;
+    font-size:10px;
+    font-weight:850;
+    margin-bottom:9px;
+}
+
+.file-direction-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.file-direction-button{
+    border:1px solid #26394c;
+    background:#0a121b;
+    color:#a8b5c5;
+    border-radius:9px;
+    padding:14px;
+    cursor:pointer;
+    font-weight:800;
+}
+
+.file-direction-button.active{
+    border-color:#1687ff;
+    color:#fff;
+    background:#0c2035;
+    box-shadow:inset 0 0 0 1px #1687ff;
+}
+
+.file-convert-actions{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:20px;
+}
+
+.file-convert-error{
+    display:none;
+    margin-top:14px;
+    border:1px solid #63313a;
+    background:#1b0d11;
+    color:#ff8994;
+    padding:12px 14px;
+    border-radius:8px;
+    font-size:11px;
+}
+
+.file-convert-error.visible{
+    display:block;
+}
+
+
+
+.file-result{
+    margin-top:24px;
+    border-top:1px solid #1e2d3c;
+    padding-top:22px;
+}
+
+.file-result-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+}
+
+.file-result-header small{
+    color:#708298;
+    font-size:9px;
+    font-weight:850;
+    letter-spacing:.8px;
+}
+
+.file-result-header h2{
+    margin:5px 0 0;
+    font-size:20px;
+}
+
+.file-result-pass{
+    color:var(--green);
+    font-size:11px;
+}
+
+.file-result-summary{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-top:18px;
+}
+
+.file-result-summary div{
+    border:1px solid #203244;
+    background:#09111a;
+    border-radius:8px;
+    padding:12px;
+}
+
+.file-result-summary small{
+    display:block;
+    color:#687b90;
+    font-size:9px;
+    font-weight:850;
+    margin-bottom:5px;
+}
+
+.file-result-summary strong{
+    font-size:12px;
+}
+
+.file-change-title{
+    margin-top:20px;
+    color:#74869a;
+    font-size:9px;
+    font-weight:850;
+    letter-spacing:.8px;
+}
+
+.file-change-list{
+    margin-top:8px;
+}
+
+.file-change-row{
+    display:grid;
+    grid-template-columns:1fr 1fr auto 1fr;
+    gap:10px;
+    align-items:center;
+    padding:11px 12px;
+    background:#09111a;
+    border:1px solid #1e3041;
+    border-radius:7px;
+    margin-top:7px;
+    font-family:monospace;
+    font-size:12px;
+}
+
+.file-change-row b{
+    color:#63758a;
+}
+
+.file-result-note{
+    margin-top:14px;
+    color:#74869a;
+    font-size:10px;
+}
+
+.file-result-actions{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:18px;
+}
+
+
+
+.file-organization-detection{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:18px;
+    padding:15px 16px;
+    background:#09111a;
+    border:1px solid #26394c;
+    border-radius:9px;
+}
+
+.file-organization-detection small{
+    display:block;
+    color:#6e8094;
+    font-size:9px;
+    font-weight:850;
+    letter-spacing:.8px;
+    margin-bottom:6px;
+}
+
+.file-organization-detection strong{
+    font-size:13px;
+}
+
+.file-organization-confidence{
+    color:#8394a8;
+    font-size:10px;
+    font-weight:850;
+}
+
+.file-organization-reason{
+    margin-top:9px;
+    color:#74869a;
+    font-size:10px;
+    line-height:1.5;
+}
+
+.file-manual-toggle{
+    margin-top:12px;
+    padding:0;
+    background:none;
+    border:none;
+    color:#71869d;
+    font-size:10px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.file-manual-toggle:hover{
+    color:#a8c8ea;
+}
+
+.file-manual-organization{
+    display:none;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:10px;
+}
+
+.file-manual-organization.visible{
+    display:grid;
+}
+
 
 /* GUIDE */
 
@@ -1853,7 +2174,14 @@ footer{
 
         </div>
 
-        <div class="selector-actions">
+        <div class="selector-actions" style="gap:10px">
+            <button
+                class="file-open-button"
+                onclick="openFileConversion()"
+            >
+                Open File
+            </button>
+
             <button class="primary" onclick="show('guide')">
                 Continue →
             </button>
@@ -1913,6 +2241,218 @@ footer{
 
 </section>
 
+
+
+<!-- FILE CONVERSION -->
+
+<section id="fileConversion" class="screen">
+
+    <button class="back" onclick="show('select')">
+        ← Select Vehicle
+    </button>
+
+    <div class="heading-row">
+        <div>
+            <div class="eyebrow">FILE SOURCE</div>
+            <h1>Open Memory File</h1>
+            <p class="subtitle">
+                Convert an existing EEPROM image without
+                connecting a physical cluster.
+            </p>
+        </div>
+    </div>
+
+    <div class="file-source-card card card-pad">
+
+        <input
+            id="memoryFileInput"
+            type="file"
+            accept=".bin,.eep,.rom"
+            hidden
+        >
+
+        <div
+            id="fileDropZone"
+            class="file-drop-zone"
+            onclick="document.getElementById(
+                'memoryFileInput'
+            ).click()"
+        >
+            <strong>Select memory file</strong>
+            <span>
+                .BIN · .EEP · .ROM
+            </span>
+        </div>
+
+        <div
+            id="fileDetails"
+            class="file-details"
+        >
+
+            <div class="file-info-grid">
+
+                <div class="file-info-box">
+                    <small>FILE</small>
+                    <strong id="fileName">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="file-info-box">
+                    <small>SIZE</small>
+                    <strong id="fileSize">
+                        ---
+                    </strong>
+                </div>
+
+                <div class="file-info-box">
+                    <small>STATUS</small>
+                    <strong id="fileStatus">
+                        NOT CHECKED
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="file-profile-note">
+                <strong>
+                    Jeep Wrangler 2012–2018
+                </strong><br>
+                Vehicle profile: USER SELECTED.
+                File size compatibility does not
+                automatically identify the vehicle.
+            </div>
+
+            <div class="file-direction">
+
+                <label>
+                    MEMORY ORGANIZATION
+                </label>
+
+                <div
+                    id="fileOrganizationDetection"
+                    class="file-organization-detection"
+                >
+                    <div>
+                        <small>
+                            AUTO DETECTION
+                        </small>
+
+                        <strong
+                            id="fileOrganizationDetected"
+                        >
+                            WAITING FOR FILE
+                        </strong>
+                    </div>
+
+                    <span
+                        id="fileOrganizationConfidence"
+                        class="file-organization-confidence"
+                    >
+                        ---
+                    </span>
+                </div>
+
+                <div
+                    id="fileOrganizationReason"
+                    class="file-organization-reason"
+                >
+                    Load a supported EEPROM file to
+                    detect its memory organization.
+                </div>
+
+                <button
+                    id="fileManualOverrideToggle"
+                    class="file-manual-toggle"
+                    onclick="toggleFileManualOrganization()"
+                    type="button"
+                >
+                    Manual Override
+                </button>
+
+                <div
+                    id="fileManualOrganization"
+                    class="file-manual-organization"
+                >
+                    <button
+                        id="fileOrganizationX16"
+                        class="file-direction-button"
+                        onclick="setFileOrganization(
+                            'X16'
+                        )"
+                        type="button"
+                    >
+                        X16 · 512 × 16
+                    </button>
+
+                    <button
+                        id="fileOrganizationX8"
+                        class="file-direction-button"
+                        onclick="setFileOrganization(
+                            'X8'
+                        )"
+                        type="button"
+                    >
+                        X8 · 1024 × 8
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="file-direction">
+
+                <label>
+                    CONVERSION DIRECTION
+                </label>
+
+                <div class="file-direction-grid">
+
+                    <button
+                        id="fileKmToMiles"
+                        class="file-direction-button active"
+                        onclick="setFileDirection(
+                            'KM',
+                            'MI'
+                        )"
+                    >
+                        KM → MILES
+                    </button>
+
+                    <button
+                        id="fileMilesToKm"
+                        class="file-direction-button"
+                        onclick="setFileDirection(
+                            'MI',
+                            'KM'
+                        )"
+                    >
+                        MILES → KM
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div
+                id="fileConvertError"
+                class="file-convert-error"
+            ></div>
+
+            <div class="file-convert-actions">
+                <button
+                    id="fileConvertButton"
+                    class="primary"
+                    onclick="convertSelectedFile()"
+                >
+                    Convert File →
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
 
 <!-- CONNECTION GUIDE -->
 
@@ -3902,6 +4442,717 @@ document.addEventListener('click', event => {
 
 
 
+
+let selectedMemoryFile = null;
+let fileSourceUnit = "KM";
+let fileTargetUnit = "MI";
+let fileMemoryOrganization = "AUTO";
+let fileDetectedOrganization = null;
+let convertedFileBytes = null;
+let convertedFileName = null;
+
+function openFileConversion(){
+    selectedMemoryFile = null;
+    convertedFileBytes = null;
+    convertedFileName = null;
+
+    const input = document.getElementById(
+        "memoryFileInput"
+    );
+
+    if(input){
+        input.value = "";
+    }
+
+    document.getElementById(
+        "fileDetails"
+    ).classList.remove("visible");
+
+    document.getElementById(
+        "fileConvertError"
+    ).classList.remove("visible");
+
+    setFileDirection("KM", "MI");
+
+    fileMemoryOrganization = "AUTO";
+    fileDetectedOrganization = null;
+
+    resetFileOrganizationDetection();
+
+    show("fileConversion");
+}
+
+
+
+function resetFileOrganizationDetection(){
+    const detected = document.getElementById(
+        "fileOrganizationDetected"
+    );
+
+    const confidence = document.getElementById(
+        "fileOrganizationConfidence"
+    );
+
+    const reason = document.getElementById(
+        "fileOrganizationReason"
+    );
+
+    const manual = document.getElementById(
+        "fileManualOrganization"
+    );
+
+    const x16 = document.getElementById(
+        "fileOrganizationX16"
+    );
+
+    const x8 = document.getElementById(
+        "fileOrganizationX8"
+    );
+
+    if(detected){
+        detected.textContent =
+            "WAITING FOR FILE";
+        detected.style.color = "";
+    }
+
+    if(confidence){
+        confidence.textContent = "---";
+        confidence.style.color = "";
+    }
+
+    if(reason){
+        reason.textContent =
+            "Load a supported EEPROM file to " +
+            "detect its memory organization.";
+    }
+
+    if(manual){
+        manual.classList.remove("visible");
+    }
+
+    if(x16){
+        x16.classList.remove("active");
+    }
+
+    if(x8){
+        x8.classList.remove("active");
+    }
+}
+
+
+function toggleFileManualOrganization(){
+    const manual = document.getElementById(
+        "fileManualOrganization"
+    );
+
+    if(manual){
+        manual.classList.toggle("visible");
+    }
+}
+
+
+function setFileOrganization(organization){
+    fileMemoryOrganization = organization;
+    fileDetectedOrganization = null;
+
+    const x16 = document.getElementById(
+        "fileOrganizationX16"
+    );
+
+    const x8 = document.getElementById(
+        "fileOrganizationX8"
+    );
+
+    x16.classList.toggle(
+        "active",
+        organization === "X16"
+    );
+
+    x8.classList.toggle(
+        "active",
+        organization === "X8"
+    );
+
+    const detected = document.getElementById(
+        "fileOrganizationDetected"
+    );
+
+    const confidence = document.getElementById(
+        "fileOrganizationConfidence"
+    );
+
+    const reason = document.getElementById(
+        "fileOrganizationReason"
+    );
+
+    detected.textContent =
+        organization +
+        (
+            organization === "X16"
+            ? " · 512 × 16"
+            : " · 1024 × 8"
+        );
+
+    detected.style.color = "var(--blue)";
+
+    confidence.textContent =
+        "MANUAL OVERRIDE";
+
+    confidence.style.color =
+        "var(--blue)";
+
+    reason.textContent =
+        "Memory organization was selected manually.";
+
+    convertedFileBytes = null;
+    convertedFileName = null;
+
+    const oldResult =
+        document.getElementById(
+            "fileConversionResult"
+        );
+
+    if(oldResult){
+        oldResult.remove();
+    }
+}
+
+
+async function detectSelectedFileOrganization(file){
+    fileMemoryOrganization = "AUTO";
+    fileDetectedOrganization = null;
+
+    const detected = document.getElementById(
+        "fileOrganizationDetected"
+    );
+
+    const confidence = document.getElementById(
+        "fileOrganizationConfidence"
+    );
+
+    const reason = document.getElementById(
+        "fileOrganizationReason"
+    );
+
+    const manual = document.getElementById(
+        "fileManualOrganization"
+    );
+
+    detected.textContent =
+        "ANALYZING...";
+
+    detected.style.color = "";
+
+    confidence.textContent =
+        "AUTO";
+
+    confidence.style.color = "";
+
+    reason.textContent =
+        "Inspecting EEPROM structure...";
+
+    manual.classList.remove("visible");
+
+    if(file.size !== 1024){
+        detected.textContent =
+            "UNAVAILABLE";
+
+        detected.style.color =
+            "var(--red)";
+
+        confidence.textContent =
+            "INVALID SIZE";
+
+        confidence.style.color =
+            "var(--red)";
+
+        reason.textContent =
+            "Automatic detection requires the " +
+            "expected 1024-byte EEPROM image.";
+
+        return;
+    }
+
+    try{
+        const buffer = await file.arrayBuffer();
+
+        const response = await fetch(
+            "/api/file/detect",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "application/octet-stream"
+                },
+                body: buffer
+            }
+        );
+
+        const data = await response.json();
+
+        if(!response.ok || !data.success){
+            throw new Error(
+                data.detail ||
+                "Organization detection failed."
+            );
+        }
+
+        if(
+            data.detected &&
+            data.memory_organization
+        ){
+            fileDetectedOrganization =
+                data.memory_organization;
+
+            /*
+             Keep AUTO as the conversion request.
+             The backend independently re-detects
+             the organization before conversion.
+            */
+            fileMemoryOrganization = "AUTO";
+
+            detected.textContent =
+                data.memory_organization +
+                (
+                    data.memory_organization === "X16"
+                    ? " · 512 × 16"
+                    : " · 1024 × 8"
+                ) +
+                "  ✓";
+
+            detected.style.color =
+                "var(--green)";
+
+            confidence.textContent =
+                "AUTO-DETECTED · " +
+                data.confidence;
+
+            confidence.style.color =
+                "var(--green)";
+
+            reason.textContent =
+                data.reason;
+
+            return;
+        }
+
+        detected.textContent =
+            "INCONCLUSIVE";
+
+        detected.style.color =
+            "var(--amber)";
+
+        confidence.textContent =
+            "MANUAL CHECK REQUIRED";
+
+        confidence.style.color =
+            "var(--amber)";
+
+        reason.textContent =
+            "CONVERTION-PRO could not determine " +
+            "X8 or X16 with sufficient confidence.";
+
+        manual.classList.add("visible");
+
+    }catch(error){
+        detected.textContent =
+            "DETECTION ERROR";
+
+        detected.style.color =
+            "var(--red)";
+
+        confidence.textContent =
+            "MANUAL CHECK REQUIRED";
+
+        confidence.style.color =
+            "var(--red)";
+
+        reason.textContent =
+            error.message;
+
+        manual.classList.add("visible");
+    }
+}
+
+
+function setFileDirection(source, target){
+    fileSourceUnit = source;
+    fileTargetUnit = target;
+
+    const kmMiles = document.getElementById(
+        "fileKmToMiles"
+    );
+
+    const milesKm = document.getElementById(
+        "fileMilesToKm"
+    );
+
+    if(!kmMiles || !milesKm){
+        return;
+    }
+
+    kmMiles.classList.toggle(
+        "active",
+        source === "KM"
+    );
+
+    milesKm.classList.toggle(
+        "active",
+        source === "MI"
+    );
+
+    convertedFileBytes = null;
+    convertedFileName = null;
+}
+
+function showFileError(message){
+    const box = document.getElementById(
+        "fileConvertError"
+    );
+
+    box.textContent = message;
+    box.classList.add("visible");
+}
+
+function clearFileError(){
+    const box = document.getElementById(
+        "fileConvertError"
+    );
+
+    box.textContent = "";
+    box.classList.remove("visible");
+}
+
+function bytesFromHex(hex){
+    const bytes = new Uint8Array(
+        hex.length / 2
+    );
+
+    for(let i = 0; i < bytes.length; i++){
+        bytes[i] = parseInt(
+            hex.substr(i * 2, 2),
+            16
+        );
+    }
+
+    return bytes;
+}
+
+async function convertSelectedFile(){
+    clearFileError();
+
+    if(!selectedMemoryFile){
+        showFileError(
+            "Select a memory file first."
+        );
+        return;
+    }
+
+    if(selectedMemoryFile.size !== 1024){
+        showFileError(
+            "File size does not match the selected " +
+            "Jeep Wrangler profile. Expected 1024 bytes."
+        );
+        return;
+    }
+
+
+    if(
+        fileMemoryOrganization === "AUTO" &&
+        !fileDetectedOrganization
+    ){
+        showFileError(
+            "Memory organization could not be " +
+            "detected automatically. Select X8 or " +
+            "X16 using Manual Override."
+        );
+
+        const manual = document.getElementById(
+            "fileManualOrganization"
+        );
+
+        if(manual){
+            manual.classList.add("visible");
+        }
+
+        return;
+    }
+
+    const button = document.getElementById(
+        "fileConvertButton"
+    );
+
+    const originalText = button.textContent;
+
+    button.disabled = true;
+    button.textContent = "Converting...";
+
+    try{
+        const buffer =
+            await selectedMemoryFile.arrayBuffer();
+
+        const url =
+            "/api/file/convert" +
+            "?source_unit=" +
+            encodeURIComponent(fileSourceUnit) +
+            "&target_unit=" +
+            encodeURIComponent(fileTargetUnit) +
+            "&memory_organization=" +
+            encodeURIComponent(
+                fileMemoryOrganization
+            );
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type":
+                    "application/octet-stream"
+            },
+            body: buffer
+        });
+
+        const data = await response.json();
+
+        if(!response.ok || !data.success){
+            throw new Error(
+                data.detail ||
+                "File conversion failed."
+            );
+        }
+
+        if(!data.verified){
+            throw new Error(
+                "Converted file verification failed."
+            );
+        }
+
+        convertedFileBytes = bytesFromHex(
+            data.data_hex
+        );
+
+        convertedFileName =
+            data.converted_filename;
+
+        showFileConversionResult(data);
+
+    }catch(error){
+        showFileError(error.message);
+    }finally{
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
+function showFileConversionResult(data){
+    const existing = document.getElementById(
+        "fileConversionResult"
+    );
+
+    if(existing){
+        existing.remove();
+    }
+
+    const changes = data.changes.map(
+        change => `
+            <div class="file-change-row">
+                <strong>${change.offset_hex}</strong>
+                <span>${change.before_hex}</span>
+                <b>→</b>
+                <span>${change.after_hex}</span>
+            </div>
+        `
+    ).join("");
+
+    const result = document.createElement("div");
+
+    result.id = "fileConversionResult";
+    result.className = "file-result";
+
+    result.innerHTML = `
+        <div class="file-result-header">
+            <div>
+                <small>CONVERSION RESULT</small>
+                <h2>File Verified</h2>
+            </div>
+
+            <strong class="file-result-pass">
+                VERIFIED ✓
+            </strong>
+        </div>
+
+        <div class="file-result-summary">
+            <div>
+                <small>DIRECTION</small>
+                <strong>
+                    ${data.source_unit}
+                    →
+                    ${data.target_unit}
+                </strong>
+            </div>
+
+            <div>
+                <small>ORGANIZATION</small>
+                <strong>
+                    ${data.memory_organization}
+                </strong>
+                <small>
+                    ${
+                        data.organization_source ===
+                        "AUTO_DETECTED"
+                        ? "AUTO-DETECTED"
+                        : "MANUAL"
+                    }
+                </small>
+            </div>
+
+            <div>
+                <small>SIZE</small>
+                <strong>
+                    ${data.memory_size} BYTES
+                </strong>
+            </div>
+
+            <div>
+                <small>CHANGED</small>
+                <strong>
+                    ${data.changed_byte_count}
+                    BYTES
+                </strong>
+            </div>
+        </div>
+
+        <div class="file-change-title">
+            VERIFIED CHANGES
+        </div>
+
+        <div class="file-change-list">
+            ${changes}
+        </div>
+
+        <div class="file-result-note">
+            Original file remains unchanged.
+            Physical cluster access was not used.
+        </div>
+
+        <div class="file-result-actions">
+            <button
+                class="primary"
+                onclick="saveConvertedFile()"
+            >
+                Save Converted File
+            </button>
+        </div>
+    `;
+
+    document.querySelector(
+        "#fileConversion .file-source-card"
+    ).appendChild(result);
+
+    result.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
+}
+
+function saveConvertedFile(){
+    if(
+        !convertedFileBytes ||
+        !convertedFileName
+    ){
+        showFileError(
+            "No verified converted file is available."
+        );
+        return;
+    }
+
+    const blob = new Blob(
+        [convertedFileBytes],
+        {
+            type:
+                "application/octet-stream"
+        }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = convertedFileName;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+}
+
+document.addEventListener(
+    "change",
+    async event => {
+        if(
+            event.target.id !==
+            "memoryFileInput"
+        ){
+            return;
+        }
+
+        clearFileError();
+
+        const file =
+            event.target.files[0];
+
+        if(!file){
+            return;
+        }
+
+        selectedMemoryFile = file;
+        convertedFileBytes = null;
+        convertedFileName = null;
+
+        const oldResult =
+            document.getElementById(
+                "fileConversionResult"
+            );
+
+        if(oldResult){
+            oldResult.remove();
+        }
+
+        document.getElementById(
+            "fileName"
+        ).textContent = file.name;
+
+        document.getElementById(
+            "fileSize"
+        ).textContent =
+            file.size + " bytes";
+
+        const status = document.getElementById(
+            "fileStatus"
+        );
+
+        if(file.size === 1024){
+            status.textContent = "SIZE VALID ✓";
+            status.style.color =
+                "var(--green)";
+        }else{
+            status.textContent =
+                "SIZE INVALID ✕";
+            status.style.color =
+                "var(--red)";
+        }
+
+        document.getElementById(
+            "fileDetails"
+        ).classList.add("visible");
+
+        await detectSelectedFileOrganization(
+            file
+        );
+    }
+);
+
+
 function show(id){
     document.querySelectorAll('.screen').forEach(
         s => s.classList.remove('active')
@@ -4870,6 +6121,293 @@ async def convert_cluster(request: ConversionRequest):
         return {
             "success": False,
             "verified": False,
+            "detail": str(error),
+        }
+
+
+
+@app.post("/api/file/detect")
+async def detect_file_organization(
+    request: Request,
+):
+    """
+    Detect supported EEPROM memory organization.
+
+    Detection is conservative. Ambiguous files are
+    reported as ambiguous rather than guessed.
+    """
+
+    try:
+        original_data = await request.body()
+
+        if not original_data:
+            raise RuntimeError(
+                "Uploaded file is empty."
+            )
+
+        result = detect_memory_organization(
+            original_data
+        )
+
+        return {
+            "success": True,
+            "source": "FILE",
+            "memory_size": len(original_data),
+            "detected": result["detected"],
+            "memory_organization": (
+                result["organization"]
+            ),
+            "confidence": (
+                result["confidence"]
+            ),
+            "reason": result["reason"],
+            "raw_matches": (
+                result["raw_matches"]
+            ),
+            "swapped_matches": (
+                result["swapped_matches"]
+            ),
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "source": "FILE",
+            "detected": False,
+            "memory_organization": None,
+            "confidence": "ERROR",
+            "detail": str(error),
+        }
+
+
+
+@app.post("/api/file/convert")
+async def convert_file(
+    request: Request,
+    source_unit: str,
+    target_unit: str,
+    memory_organization: str = "AUTO",
+):
+    """
+    Convert an uploaded EEPROM image entirely in memory.
+
+    The vehicle profile is user-selected.
+    No programmer connection or hardware write occurs.
+    """
+
+    try:
+        profile_path = Path(
+            "vehicles/jeep/wrangler_2012_2018/profile.json"
+        )
+
+        if not profile_path.exists():
+            raise RuntimeError(
+                "Jeep vehicle profile not found."
+            )
+
+        profile = json.loads(
+            profile_path.read_text(
+                encoding="utf-8"
+            )
+        )
+
+        original_data = await request.body()
+
+        if not original_data:
+            raise RuntimeError(
+                "Uploaded file is empty."
+            )
+
+        expected_size = int(
+            profile["memory"]["size_bytes"]
+        )
+
+        if len(original_data) != expected_size:
+            raise RuntimeError(
+                "EEPROM size does not match vehicle profile. "
+                f"Expected {expected_size} bytes, "
+                f"received {len(original_data)} bytes."
+            )
+
+        source_unit = source_unit.upper()
+        target_unit = target_unit.upper()
+
+        requested_organization = (
+            memory_organization
+            .upper()
+            .strip()
+        )
+
+        detection_confidence = None
+        organization_source = "USER_SELECTED"
+
+        if requested_organization == "AUTO":
+            detection = detect_memory_organization(
+                original_data
+            )
+
+            if not detection["detected"]:
+                raise RuntimeError(
+                    "Memory organization could not be "
+                    "detected with sufficient confidence. "
+                    "Select X8 or X16 manually."
+                )
+
+            resolved_organization = (
+                detection["organization"]
+            )
+
+            detection_confidence = (
+                detection["confidence"]
+            )
+
+            organization_source = (
+                "AUTO_DETECTED"
+            )
+
+        elif requested_organization in {
+            "X8",
+            "X16",
+        }:
+            resolved_organization = (
+                requested_organization
+            )
+
+        else:
+            raise RuntimeError(
+                "Unsupported memory organization. "
+                "Expected AUTO, X8 or X16."
+            )
+
+        workflow = ConversionWorkflow(
+            SimulatedProgrammer(),
+            profile,
+        )
+
+        converted_data = (
+            workflow.convert_file_data(
+                original_data=original_data,
+                source_unit=source_unit,
+                target_unit=target_unit,
+                memory_organization=resolved_organization,
+            )
+        )
+
+        # Independent byte-level verification.
+        if len(converted_data) != len(
+            original_data
+        ):
+            raise RuntimeError(
+                "Converted file size verification failed."
+            )
+
+        changes = []
+
+        for offset, (before, after) in enumerate(
+            zip(
+                original_data,
+                converted_data,
+            )
+        ):
+            if before != after:
+                changes.append({
+                    "offset": offset,
+                    "offset_hex": (
+                        f"0x{offset:X}"
+                    ),
+                    "before": before,
+                    "after": after,
+                    "before_hex": (
+                        f"{before:02X}"
+                    ),
+                    "after_hex": (
+                        f"{after:02X}"
+                    ),
+                })
+
+        expected_offsets = {0x68, 0x69}
+
+        actual_offsets = {
+            item["offset"]
+            for item in changes
+        }
+
+        if actual_offsets != expected_offsets:
+            raise RuntimeError(
+                "Converted file did not produce "
+                "the expected validated changes."
+            )
+
+        original_sha256 = hashlib.sha256(
+            original_data
+        ).hexdigest()
+
+        converted_sha256 = hashlib.sha256(
+            converted_data
+        ).hexdigest()
+
+        suffix = (
+            "miles"
+            if target_unit == "MI"
+            else "km"
+        )
+
+        return {
+            "success": True,
+            "verified": True,
+            "source": "FILE",
+            "physical_cluster_required": False,
+            "hardware_access": False,
+            "profile_source": "USER_SELECTED",
+            "memory_organization": (
+                resolved_organization
+            ),
+            "organization_source": (
+                organization_source
+            ),
+            "detection_confidence": (
+                detection_confidence
+            ),
+            "vehicle": {
+                "make": profile["make"],
+                "model": profile["model"],
+                "generation": (
+                    profile["generation"]
+                ),
+            },
+            "memory_type": (
+                profile["memory"]["type"]
+            ),
+            "memory_size": len(
+                original_data
+            ),
+            "source_unit": source_unit,
+            "target_unit": target_unit,
+            "original_sha256": (
+                original_sha256
+            ),
+            "converted_sha256": (
+                converted_sha256
+            ),
+            "changes": changes,
+            "changed_byte_count": len(
+                changes
+            ),
+            "converted_filename": (
+                "jeep_wr_2012_2018_"
+                f"{suffix}.bin"
+            ),
+            "data_hex": (
+                converted_data.hex()
+            ),
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "verified": False,
+            "source": "FILE",
+            "hardware_access": False,
             "detail": str(error),
         }
 
