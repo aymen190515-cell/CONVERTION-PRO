@@ -2123,6 +2123,29 @@ footer{
     .recent-grid,.tool-grid{grid-template-columns:1fr}
     h1{font-size:29px}
 }
+
+.ready-cluster-screen{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    text-align:center;
+    line-height:1.1;
+}
+
+.ready-cluster-status{
+    font-size:16px;
+    font-weight:700;
+    letter-spacing:.04em;
+}
+
+.ready-cluster-voltage{
+    font-size:16px;
+    font-weight:600;
+    color:#61a8ff;
+}
+
 </style>
 </head>
 
@@ -2200,7 +2223,10 @@ footer{
                 Open File
             </button>
 
-            <button class="primary" onclick="show('guide')">
+            <button
+                class="primary"
+                onclick="openConnectionGuide()"
+            >
                 Continue →
             </button>
         </div>
@@ -2488,7 +2514,12 @@ footer{
 
     <div class="heading-row">
         <div>
-            <div class="eyebrow">JEEP · WRANGLER 2012–2018</div>
+            <div
+                class="eyebrow"
+                id="guideVehicleEyebrow"
+            >
+                JEEP · WRANGLER 2012–2018
+            </div>
             <h1>Connection Guide</h1>
             <p class="subtitle">
                 Follow the connection procedure before powering the cluster.
@@ -2509,7 +2540,10 @@ footer{
         <div class="card visual">
 
             <div class="cluster-art">
-                <div class="cluster-screen">
+                <div
+                    class="cluster-screen"
+                    id="guideClusterScreen"
+                >
                     JEEP<br>
                     WRANGLER
                 </div>
@@ -2528,25 +2562,42 @@ footer{
 
             <div class="spec">
                 <small>CONNECTION METHOD</small>
-                <strong>Bench</strong>
+                <strong id="guideConnectionMethod">
+                    Bench
+                </strong>
             </div>
 
             <div class="spec">
                 <small>REQUIRED CABLE</small>
-                <strong class="blue">CP-JEEP-004</strong>
+                <strong
+                    class="blue"
+                    id="guideRequiredCable"
+                >
+                    CP-JEEP-004
+                </strong>
             </div>
 
             <div class="spec">
                 <small>SUPPLY</small>
-                <strong>12.0 V</strong>
+                <strong id="guideSupply">
+                    12.0 V
+                </strong>
             </div>
 
             <div class="spec">
                 <small>POWER STATE</small>
-                <strong class="amber">OFF</strong>
+                <strong
+                    class="amber"
+                    id="guidePowerState"
+                >
+                    OFF
+                </strong>
             </div>
 
-            <ul class="steps">
+            <ul
+                class="steps"
+                id="guideSteps"
+            >
                 <li>
                     <span class="num">1</span>
                     Connect CP-JEEP-004 to the instrument cluster.
@@ -2564,7 +2615,11 @@ footer{
             </ul>
 
             <div class="actions">
-                <button class="primary" onclick="runSafetyCheck()">
+                <button
+                    class="primary"
+                    id="guideProceedButton"
+                    onclick="runSafetyCheck()"
+                >
                     Proceed →
                 </button>
             </div>
@@ -2651,7 +2706,7 @@ footer{
                 <button
                     class="primary"
                     id="safetyContinue"
-                    onclick="show('ready')"
+                    onclick="openReadyScreen()"
                     disabled
                 >
                     Continue →
@@ -2683,7 +2738,10 @@ footer{
         <div>
             <div class="eyebrow">CONNECTED</div>
             <h1>Cluster Ready</h1>
-            <p class="subtitle">
+            <p
+                class="subtitle"
+                id="readyVehicleSubtitle"
+            >
                 Jeep Wrangler 2012–2018
             </p>
         </div>
@@ -2693,9 +2751,16 @@ footer{
 
         <div class="card visual ready-visual">
             <div class="cluster-art">
-                <div class="cluster-screen">
-                    CONNECTED<br>
-                    <span id="readyClusterVoltage">--.- V</span>
+                <div class="cluster-screen ready-cluster-screen">
+                    <div class="ready-cluster-status">
+                        CONNECTED
+                    </div>
+                    <div
+                        class="ready-cluster-voltage"
+                        id="readyClusterVoltage"
+                    >
+                        --.- V
+                    </div>
                 </div>
             </div>
         </div>
@@ -2710,7 +2775,9 @@ footer{
 
                 <div class="metric">
                     <small>VEHICLE</small>
-                    <strong>Jeep Wrangler</strong>
+                    <strong id="readyVehicle">
+                        Jeep Wrangler
+                    </strong>
                 </div>
 
                 <div class="metric">
@@ -2792,14 +2859,21 @@ footer{
 
             <div class="unit-card">
                 <small>SOURCE</small>
-                <strong>KM / KMH</strong>
+                <strong id="confirmSourceUnit">
+                    KM / KMH
+                </strong>
             </div>
 
             <div class="arrow">→</div>
 
             <div class="unit-card">
                 <small>TARGET</small>
-                <strong class="blue">MILES / MPH</strong>
+                <strong
+                    class="blue"
+                    id="confirmTargetUnit"
+                >
+                    MILES / MPH
+                </strong>
             </div>
 
         </div>
@@ -2831,7 +2905,10 @@ footer{
         <div>
             <div class="eyebrow">PROGRAMMING</div>
             <h1>Programming Cluster</h1>
-            <p class="subtitle">
+            <p
+                class="subtitle"
+                id="programVehicleSubtitle"
+            >
                 Jeep Wrangler 2012–2018
             </p>
         </div>
@@ -2908,7 +2985,10 @@ footer{
         <div class="center">
             <div class="eyebrow">VERIFIED</div>
             <h1>Conversion Complete</h1>
-            <p class="subtitle">
+            <p
+                class="subtitle"
+                id="completeConversionDirection"
+            >
                 KM / KMH → MILES / MPH
             </p>
         </div>
@@ -4689,6 +4769,145 @@ let fileDetectedOrganization = null;
 let convertedFileBytes = null;
 let convertedFileName = null;
 
+
+function openConnectionGuide(){
+    updateSelectedVehicle();
+
+    const eyebrow = document.getElementById(
+        "guideVehicleEyebrow"
+    );
+
+    const clusterScreen = document.getElementById(
+        "guideClusterScreen"
+    );
+
+    const method = document.getElementById(
+        "guideConnectionMethod"
+    );
+
+    const cable = document.getElementById(
+        "guideRequiredCable"
+    );
+
+    const supply = document.getElementById(
+        "guideSupply"
+    );
+
+    const power = document.getElementById(
+        "guidePowerState"
+    );
+
+    const steps = document.getElementById(
+        "guideSteps"
+    );
+
+    const proceed = document.getElementById(
+        "guideProceedButton"
+    );
+
+
+    if(
+        selectedVehicle.key ===
+        "jeep_wrangler_2012_2018"
+    ){
+        eyebrow.textContent =
+            "JEEP · WRANGLER 2012–2018";
+
+        clusterScreen.innerHTML =
+            "JEEP<br>WRANGLER";
+
+        method.textContent =
+            "Bench";
+
+        cable.textContent =
+            "CP-JEEP-004";
+
+        supply.textContent =
+            "12.0 V";
+
+        power.textContent =
+            "OFF";
+
+        steps.innerHTML = `
+            <li>
+                <span class="num">1</span>
+                Connect CP-JEEP-004 to the
+                instrument cluster.
+            </li>
+
+            <li>
+                <span class="num">2</span>
+                Connect the universal end to
+                the programmer.
+            </li>
+
+            <li>
+                <span class="num">3</span>
+                Keep cluster power OFF until
+                verification.
+            </li>
+        `;
+
+        proceed.disabled = false;
+        proceed.textContent = "Proceed →";
+
+    }else if(
+        selectedVehicle.key.startsWith(
+            "toyota_"
+        )
+    ){
+        eyebrow.textContent =
+            "TOYOTA · " +
+            selectedVehicle.label.toUpperCase();
+
+        clusterScreen.innerHTML =
+            "TOYOTA<br>" +
+            selectedVehicle.label
+                .toUpperCase();
+
+        method.textContent =
+            "RH850";
+
+        cable.textContent =
+            "NOT CONFIGURED";
+
+        supply.textContent =
+            "NOT CONFIGURED";
+
+        power.textContent =
+            "OFF";
+
+        steps.innerHTML = `
+            <li>
+                <span class="num">1</span>
+                Processor profile:
+                RH850 R7F701401.
+            </li>
+
+            <li>
+                <span class="num">2</span>
+                Toyota hardware communication
+                profile is not implemented yet.
+            </li>
+
+            <li>
+                <span class="num">3</span>
+                Connection pinout, supply and
+                access method must be validated
+                before programming.
+            </li>
+        `;
+
+        proceed.disabled = true;
+
+        proceed.textContent =
+            "RH850 DRIVER REQUIRED";
+    }
+
+    show("guide");
+}
+
+
 function openFileConversion(){
     updateSelectedVehicle();
     selectedMemoryFile = null;
@@ -5449,6 +5668,37 @@ function show(id){
 }
 
 
+
+function openReadyScreen(){
+    const subtitle = document.getElementById(
+        "readyVehicleSubtitle"
+    );
+
+    const vehicle = document.getElementById(
+        "readyVehicle"
+    );
+
+    if(
+        selectedVehicle.key ===
+        "jeep_wrangler_2012_2018"
+    ){
+        subtitle.textContent =
+            "Jeep Wrangler 2012–2018";
+
+        vehicle.textContent =
+            "Jeep Wrangler";
+    }else{
+        subtitle.textContent =
+            selectedVehicle.fileLabel;
+
+        vehicle.textContent =
+            selectedVehicle.fileLabel;
+    }
+
+    show("ready");
+}
+
+
 async function runSafetyCheck(){
     show('safety');
 
@@ -5476,6 +5726,36 @@ async function runSafetyCheck(){
 
     const message =
         document.getElementById('safetyResultText');
+
+
+    if(
+        selectedVehicle.key.startsWith(
+            "toyota_"
+        )
+    ){
+        Object.values(fields).forEach(field => {
+            field.textContent = "NOT AVAILABLE";
+        });
+
+        fields.programmer.textContent =
+            "RH850 DRIVER REQUIRED";
+
+        fields.profile.textContent =
+            selectedVehicle.label.toUpperCase();
+
+        continueButton.disabled = true;
+        retryButton.style.display = "none";
+
+        icon.textContent = "!";
+        title.textContent =
+            "Toyota Hardware Not Implemented";
+
+        message.textContent =
+            "RH850 communication is currently paused. " +
+            "File conversion remains available through Open File.";
+
+        return;
+    }
 
     Object.values(fields).forEach(field => {
         field.textContent = 'CHECKING...';
@@ -5595,12 +5875,116 @@ async function runSafetyCheck(){
     }
 }
 
+
+const PHYSICAL_WORKFLOWS = {
+    jeep_wrangler_2012_2018: {
+        vehicleLabel: "Jeep Wrangler 2012–2018",
+        sourceUnit: "KM",
+        targetUnit: "MI",
+        sourceDisplay: "KM / KMH",
+        targetDisplay: "MILES / MPH",
+        memoryLabel: "EEPROM"
+    }
+};
+
+
+function getPhysicalWorkflow(){
+    if(
+        !selectedVehicle ||
+        !selectedVehicle.key
+    ){
+        return null;
+    }
+
+    return (
+        PHYSICAL_WORKFLOWS[
+            selectedVehicle.key
+        ] || null
+    );
+}
+
+
+function preparePhysicalWorkflowScreens(){
+    const workflow = getPhysicalWorkflow();
+
+    if(!workflow){
+        return false;
+    }
+
+    const source =
+        document.getElementById(
+            "confirmSourceUnit"
+        );
+
+    const target =
+        document.getElementById(
+            "confirmTargetUnit"
+        );
+
+    const programVehicle =
+        document.getElementById(
+            "programVehicleSubtitle"
+        );
+
+    const completeDirection =
+        document.getElementById(
+            "completeConversionDirection"
+        );
+
+    if(source){
+        source.textContent =
+            workflow.sourceDisplay;
+    }
+
+    if(target){
+        target.textContent =
+            workflow.targetDisplay;
+    }
+
+    if(programVehicle){
+        programVehicle.textContent =
+            workflow.vehicleLabel;
+    }
+
+    if(completeDirection){
+        completeDirection.textContent =
+            workflow.sourceDisplay
+            + " → "
+            + workflow.targetDisplay;
+    }
+
+    return true;
+}
+
+
 function startAnalysis(){
+    const workflow = getPhysicalWorkflow();
+
+    if(!workflow){
+        return;
+    }
+
+    preparePhysicalWorkflowScreens();
+
     show('analyze');
 
-    const bar = document.getElementById('analyzeBar');
-    const percent = document.getElementById('analyzePercent');
-    const text = document.getElementById('analyzeText');
+    const bar =
+        document.getElementById(
+            'analyzeBar'
+        );
+
+    const percent =
+        document.getElementById(
+            'analyzePercent'
+        );
+
+    const text =
+        document.getElementById(
+            'analyzeText'
+        );
+
+    bar.style.width = '0%';
+    percent.textContent = '0%';
 
     let p = 0;
 
@@ -5610,25 +5994,52 @@ function startAnalysis(){
         bar.style.width = p + '%';
         percent.textContent = p + '%';
 
-        if(p < 30)
-            text.textContent = 'Identifying cluster hardware...';
-        else if(p < 55)
-            text.textContent = 'Reading cluster memory...';
-        else if(p < 80)
-            text.textContent = 'Validating vehicle profile...';
-        else
-            text.textContent = 'Preparing selected conversion...';
+        if(p < 30){
+            text.textContent =
+                'Identifying cluster hardware...';
+        }
+        else if(p < 55){
+            text.textContent =
+                'Reading '
+                + workflow.memoryLabel
+                + '...';
+        }
+        else if(p < 80){
+            text.textContent =
+                'Validating vehicle profile...';
+        }
+        else{
+            text.textContent =
+                'Preparing '
+                + workflow.sourceDisplay
+                + ' → '
+                + workflow.targetDisplay
+                + ' conversion...';
+        }
 
         if(p >= 100){
             clearInterval(timer);
-            setTimeout(() => show('confirm'),350);
+
+            setTimeout(
+                () => show('confirm'),
+                350
+            );
         }
     },90);
 }
 
+
 let programmingTimer = null;
 
 async function startProgramming(){
+    const workflow = getPhysicalWorkflow();
+
+    if(!workflow){
+        return;
+    }
+
+    preparePhysicalWorkflowScreens();
+
     show('program');
 
     const bar = document.getElementById('programBar');
@@ -5656,7 +6067,13 @@ async function startProgramming(){
     errorBox.textContent = '';
 
     statusText.textContent =
-        'Reading EEPROM and preparing programming operation...';
+        'Reading '
+        + workflow.memoryLabel
+        + ' and preparing '
+        + workflow.sourceDisplay
+        + ' → '
+        + workflow.targetDisplay
+        + ' conversion...';
 
     let p = 0;
     let backendFinished = false;
@@ -5669,8 +6086,10 @@ async function startProgramming(){
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            source_unit: 'KM',
-            target_unit: 'MI'
+            source_unit:
+                workflow.sourceUnit,
+            target_unit:
+                workflow.targetUnit
         })
     })
     .then(async response => {
@@ -5811,147 +6230,6 @@ async def safety_check():
     """
 
     try:
-        original_data = await request.body()
-
-        if not original_data:
-            raise RuntimeError(
-                "Uploaded file is empty."
-            )
-
-        toyota_models = {
-            "toyota_tundra_gas": "tundra_gas",
-            "toyota_tundra_hybrid": "tundra_hybrid",
-            "toyota_venza_hybrid": "venza_hybrid",
-            "toyota_highlander_limited":
-                "highlander_limited",
-            "toyota_grand_highlander":
-                "grand_highlander",
-            "toyota_sequoia_hybrid":
-                "sequoia_hybrid",
-            "toyota_corolla": "corolla",
-            "toyota_sienna": "sienna",
-            "toyota_crown_signia": "crown_signia",
-            "toyota_rav4": "rav4",
-        }
-
-        if vehicle_key in toyota_models:
-            model_key = toyota_models[
-                vehicle_key
-            ]
-
-            converted_data, variant = (
-                convert_toyota_region(
-                    original_data,
-                    model_key,
-                    source_unit,
-                    target_unit,
-                )
-            )
-
-            changes = []
-
-            for offset, (
-                before,
-                after,
-            ) in enumerate(
-                zip(
-                    original_data,
-                    converted_data,
-                )
-            ):
-                if before != after:
-                    changes.append({
-                        "offset": offset,
-                        "offset_hex":
-                            f"0x{offset:X}",
-                        "before": before,
-                        "after": after,
-                        "before_hex":
-                            f"{before:02X}",
-                        "after_hex":
-                            f"{after:02X}",
-                    })
-
-            if not changes:
-                raise RuntimeError(
-                    "Toyota conversion produced "
-                    "no memory changes."
-                )
-
-            if len(converted_data) != len(
-                original_data
-            ):
-                raise RuntimeError(
-                    "Converted file size changed."
-                )
-
-            suffix = (
-                "usa"
-                if target_unit.upper()
-                == "USA"
-                else "canada"
-            )
-
-            safe_model = model_key.replace(
-                " ",
-                "_",
-            )
-
-            return {
-                "success": True,
-                "verified": True,
-                "source": "FILE",
-                "physical_cluster_required": False,
-                "hardware_access": False,
-                "profile_source": "USER_SELECTED",
-                "vehicle": {
-                    "make": "Toyota",
-                    "model": variant.name,
-                    "generation": "",
-                },
-                "variant": variant.name,
-                "processor":
-                    "RH850 R7F701401",
-                "memory_organization": "RH850",
-                "organization_source":
-                    "PROCESSOR_PROFILE",
-                "detection_confidence":
-                    "EXACT_VALUE_MATCH",
-                "memory_type":
-                    "PROCESSOR MEMORY",
-                "memory_size":
-                    len(original_data),
-                "source_unit":
-                    source_unit.upper(),
-                "target_unit":
-                    target_unit.upper(),
-                "original_sha256":
-                    hashlib.sha256(
-                        original_data
-                    ).hexdigest(),
-                "converted_sha256":
-                    hashlib.sha256(
-                        converted_data
-                    ).hexdigest(),
-                "changes": changes,
-                "changed_byte_count":
-                    len(changes),
-                "converted_filename": (
-                    f"toyota_{safe_model}_"
-                    f"{suffix}.bin"
-                ),
-                "data_hex":
-                    converted_data.hex(),
-            }
-
-        if (
-            vehicle_key !=
-            "jeep_wrangler_2012_2018"
-        ):
-            raise RuntimeError(
-                "Unsupported vehicle profile."
-            )
-
         profile_path = Path(
             "vehicles/jeep/wrangler_2012_2018/profile.json"
         )
@@ -6044,7 +6322,6 @@ async def safety_check():
             "passed": False,
             "detail": str(error),
         }
-
 
 
 
