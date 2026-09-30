@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from pathlib import Path
 import hashlib
@@ -18,8 +18,11 @@ from convertion_pro.core.toyota_rh850 import (
     convert_region as convert_toyota_region,
 )
 from convertion_pro.hardware.simulator import SimulatedProgrammer
+from convertion_pro.hardware.memory_access import memory_capability
+from convertion_pro.ui.chip_api import router as chip_router
 
 app = FastAPI(title="CONVERTION-PRO Preview")
+app.include_router(chip_router)
 
 VEHICLE_CATALOG_DATA = load_vehicle_catalog()
 
@@ -3039,6 +3042,7 @@ footer{
     </div>
 
     <div class="nav">
+        <button onclick="location.href='/chips'">Espace puces</button>
         <button onclick="openHome()">Home</button>
         <button>Settings</button>
         <button>Help</button>
@@ -4119,11 +4123,17 @@ footer{
         </div>
     </div>
 
+<p role="note">Memory sources: HARDWARE (not implemented), SIMULATED (synthetic Jeep demo),
+or FILE (bytes from an opened file). USB/CAN adapter detection does not prove cluster memory access.</p>
 <div class="tool-grid">
+        <button class="tool tool-ready" data-tool="read-memory-demo">
+            <strong>Simulated Jeep memory demo</strong>
+            <small>Synthetic 1024-byte sample. No vehicle or adapter is accessed.</small>
+        </button>
 
         <button class="tool tool-ready" data-tool="read-memory">
-            <strong>Read Memory</strong>
-            <small>Read cluster memory and create a local dump.</small>
+            <strong>Read Memory — Hardware</strong>
+            <small>Unavailable: physical cluster memory reading is not implemented.</small>
         </button>
 
         <button
@@ -5144,7 +5154,7 @@ footer{
             <div class="eyebrow">TECHNICIAN MODE · MEMORY</div>
             <h1>Memory Workspace</h1>
             <p class="subtitle">
-                Inspect cluster memory without modifying the connected device.
+                Inspect FILE bytes or an explicitly SIMULATED demo. Physical memory reading is unavailable.
             </p>
         </div>
     </div>
@@ -5154,9 +5164,9 @@ footer{
     <div id="memoryLoading" class="card memory-loading">
         <div class="memory-loading-ring"></div>
         <div>
-            <strong>Reading Cluster Memory</strong>
+            <strong>Checking memory source</strong>
             <p class="subtitle">
-                Checking connection and reading the memory device...
+                No physical cluster memory access is implemented.
             </p>
         </div>
     </div>
@@ -6063,8 +6073,10 @@ function populateMemoryWorkspace({
     if(modeBadge){
         modeBadge.textContent =
             source === "FILE"
-                ? "EDITABLE FILE"
-                : "EDITABLE COPY";
+                ? "FILE — NOT A LIVE HARDWARE READ"
+                : source === "SIMULATED"
+                    ? "SIMULATED — NO HARDWARE ACCESSED"
+                    : "UNVERIFIED SOURCE";
     }
 
     updateMemoryModifiedState();
@@ -6271,7 +6283,7 @@ document.addEventListener(
 );
 
 
-async function readMemory(){
+async function readMemory(mode = "HARDWARE"){
     show('memory');
 
     const loading = document.getElementById('memoryLoading');
@@ -6285,7 +6297,7 @@ async function readMemory(){
 
     try {
         const response = await fetch(
-            '/api/advanced/read-memory',
+            '/api/advanced/read-memory?mode=' + encodeURIComponent(mode),
             {method:'POST'}
         );
 
@@ -6296,6 +6308,10 @@ async function readMemory(){
                 data.detail ||
                 'Memory could not be read.'
             );
+        }
+
+        if(mode !== "SIMULATED" || data.source !== "SIMULATED" || data.hardware_access !== false){
+            throw new Error('Unverified memory source. Physical memory reading is not implemented.');
         }
 
         if(
@@ -6336,9 +6352,9 @@ async function readMemory(){
 
         populateMemoryWorkspace({
             bytes,
-            source: "HARDWARE",
+            source: "SIMULATED",
             filename:
-                "read_memory.bin",
+                "simulated_jeep_demo.bin",
             sha256:
                 data.sha256,
             memoryType:
@@ -7290,11 +7306,11 @@ function goToMemoryOffset(){
 
 document.addEventListener('click', event => {
     const tool = event.target.closest(
-        '[data-tool="read-memory"]'
+        '[data-tool="read-memory"], [data-tool="read-memory-demo"]'
     );
 
     if(tool){
-        readMemory();
+        readMemory(tool.dataset.tool === "read-memory-demo" ? "SIMULATED" : "HARDWARE");
     }
 });
 
@@ -11504,14 +11520,28 @@ async def advanced_diagnostics():
         }
 
 
+@app.get("/api/advanced/memory-capability")
+async def advanced_memory_capability(chip: str = "", access: str = "", transport: str = "", controller_protocol: str = "", mode: str = "", package: str = "", mask: str = ""):
+    return memory_capability(chip, access, transport, controller_protocol, mode, package, mask)
+
+
 @app.post("/api/advanced/read-memory")
-async def advanced_read_memory():
+async def advanced_read_memory(mode: str = "HARDWARE"):
     """
     Read-only development memory operation.
 
-    Uses a synthetic Jeep EEPROM image so the public preview does not
-    depend on or expose private vehicle dumps.
+    Synthetic Jeep data is available only through explicit SIMULATED mode.
+    Physical reads fail closed before constructing a programmer or a buffer.
     """
+    if mode != "SIMULATED":
+        return JSONResponse(status_code=501 if mode == "HARDWARE" else 422, content={
+            "success": False,
+            "source": "HARDWARE" if mode == "HARDWARE" else "UNKNOWN",
+            "hardware_access": False,
+            "read_only": True,
+            "memory_read_supported": False,
+            "detail": "Physical cluster memory reading is not implemented. USB/ELM/CAN detection does not establish EEPROM access. Identify the cluster and its supported protocol first. Use Open File for an existing dump, or explicitly select the simulated Jeep demo.",
+        })
 
     try:
         profile_path = Path(
@@ -11574,7 +11604,10 @@ async def advanced_read_memory():
         return {
             "success": True,
             "read_only": True,
-            "vehicle": "Jeep Wrangler 2012–2018",
+            "source": "SIMULATED",
+            "hardware_access": False,
+            "memory_read_supported": False,
+            "vehicle": "SIMULATED Jeep Wrangler 2012-2018 demo",
             "memory_type": profile["memory"]["type"],
             "memory_size": len(memory),
             "sha256": digest,

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Conversion Pro · Espace puces</title>
+<style>
+:root{color-scheme:dark;font:15px system-ui,sans-serif;color:#e9eff8;background:#0a111c}
+*{box-sizing:border-box}body{margin:0}header{border-bottom:1px solid #263449;padding:20px 5vw;display:flex;justify-content:space-between;gap:18px}a{color:#83bdff}main{max-width:1200px;margin:auto;padding:32px 24px}h1{font-size:32px;margin:5px 0 12px}h2{font-size:19px;margin-top:0}p{line-height:1.55;color:#aebed2}.eyebrow{color:#80b8ff;text-transform:uppercase;letter-spacing:2px;font-size:11px}.grid{display:grid;grid-template-columns:340px 1fr;gap:20px;margin-top:24px}.card{background:#111d2d;border:1px solid #283b51;border-radius:12px;padding:22px;margin-bottom:18px}label{display:block;margin:15px 0 7px;color:#bfd2e8}select,input{width:100%;padding:10px;border:1px solid #40556d;background:#091421;color:#fff;border-radius:6px}button{padding:11px 14px;border:1px solid #4e6a86;border-radius:7px;color:#f5f9ff;background:#223a55;cursor:pointer;margin:8px 6px 0 0}button.primary{background:#1265be;border-color:#489ef5}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,a:focus-visible{outline:3px solid #7cbaff;outline-offset:3px}.badge{display:inline-block;padding:6px 10px;border-radius:5px;font-size:12px;font-weight:700;background:#314262}.warning{background:#33281b;border-left:3px solid #e7b761;padding:14px;color:#efd5a8}.source{color:#d0e6ff}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stats div{background:#0b1522;padding:13px;border-radius:7px;overflow-wrap:anywhere}.stats small{display:block;color:#93aac3;margin-bottom:7px}.hash{font:12px monospace;overflow-wrap:anywhere}pre{background:#08101a;border:1px solid #243951;border-radius:8px;padding:16px;overflow:auto;font:12px/1.7 monospace}#message{min-height:25px;margin:14px 0;color:#e4c17f}#compareResult{white-space:pre-wrap;overflow-wrap:anywhere}details{margin-top:16px}summary{cursor:pointer}ul{padding-left:20px;color:#b4c6dc;line-height:1.65}.muted{font-size:13px;color:#95a8bf}[hidden]{display:none!important}@media(max-width:800px){.grid{grid-template-columns:1fr}header{flex-wrap:wrap}.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><strong>CONVERSION PRO <span class="muted">/ Espace puces</span></strong><a href="/">Retour à l’aperçu véhicule</a></header>
+<main>
+<div class="eyebrow">Premier jalon · local · aucun accès matériel</div>
+<h1>Inspecter des octets, connaître leur origine.</h1>
+<p>Ouvrez un fichier ou une démonstration, préparez une sauvegarde et comparez un second fichier. Une sélection de puce ne constitue pas une identification physique.</p>
+<div class="warning">Lecture matérielle indisponible. Aucun programmateur qualifié n’est connecté par cet espace. Le vLinker n’est pas un programmateur multi-puces. Écriture, effacement et déverrouillage restent bloqués.</div>
+<div id="message" role="status" aria-live="polite">Chargement du catalogue…</div>
+<div class="grid">
+<aside>
+<section class="card"><h2>1. Profil et capacités</h2>
+<label for="profile">Puce / format attendu</label><select id="profile"></select>
+<p id="profileInfo"></p><span class="badge" id="support">NON QUALIFIÉ</span>
+<ul id="preconditions"></ul>
+<p class="muted">Contrôles physiques non effectués. La taille d’un fichier ne prouve ni sa puce d’origine, ni son état électrique.</p>
+<button disabled>Lire le matériel — indisponible</button>
+<details><summary>Familles de référence, sans pilote</summary><ul id="families"></ul><p class="muted">Aucune équivalence de couverture Orange5 n’est annoncée.</p></details>
+</section>
+<section class="card"><h2>2. Acquisition sans matériel</h2>
+<label for="file">Fichier binaire (8 Mio maximum)</label><input type="file" id="file" accept=".bin,.eep,.rom,.dump,.dat">
+<button class="primary" id="import">Ouvrir le fichier</button>
+<button id="simulate">Créer une démonstration</button>
+<p class="muted">La démonstration ST M24C32 est un motif synthétique de 4 096 octets, jamais une lecture de votre puce. Une nouvelle acquisition remplace la session temporaire affichée ; les fichiers sur votre disque restent intacts.</p>
+</section>
+</aside>
+<div>
+<section class="card" id="empty"><h2>Aucune donnée chargée</h2><p>Le tableau ne contient aucun buffer par défaut. Choisissez un fichier ou explicitement la démonstration.</p></section>
+<section class="card" id="snapshot" hidden>
+<span class="badge source" id="source"></span><h2 id="name" style="margin-top:15px"></h2>
+<div class="stats"><div><small>Taille et région</small><span id="size"></span></div><div><small>Profil choisi, non identifié</small><span id="selectedProfile"></span></div></div>
+<p class="muted">SHA-256 du contenu, pas une preuve d’identité matérielle :</p><div id="hash" class="hash"></div>
+<p class="muted">Aperçu limité aux 256 premiers octets ; l’export conserve tous les octets.</p><pre id="hex"></pre>
+<h2>3. Sauvegarde et vérification</h2>
+<button class="primary" id="backup">Télécharger la sauvegarde ZIP</button><button id="close">Fermer la session temporaire</button>
+<p class="muted">Le ZIP contient memory.bin et manifest.json : provenance, taille, hash et journal. L’application vérifie son contenu avant téléchargement ; elle ne confirme pas son enregistrement sur votre disque.</p>
+<label for="candidate">Comparer un second fichier binaire (ou memory.bin extrait du ZIP)</label><input type="file" id="candidate" accept=".bin,.eep,.rom,.dump,.dat">
+<button id="compare">Comparer les octets</button>
+<div id="compareResult" role="status"></div>
+<details><summary>Journal de cette session</summary><pre id="audit"></pre><p class="muted">Journal local temporaire, non signé. La sauvegarde inclut les événements disponibles au moment de sa génération.</p></details>
+</section>
+</div>
+</div>
+</main>
+<script>
+const el = id => document.getElementById(id);
+let catalog = null, active = null, busy = false;
+const actions = ['import','simulate','backup','compare','close'];
+function controls(){
+  actions.forEach(id => el(id).disabled = busy || (!active && ['backup','compare','close'].includes(id)));
+  el('simulate').disabled = busy || el('profile').value !== 'ST_M24C32';
+  el('profile').disabled = busy;
+}
+async function request(path, options){
+  const response = await fetch(path, options);
+  if(!response.ok){
+    const data = await response.json().catch(() => ({}));
+    throw new Error(typeof data.detail === 'string' ? data.detail : 'Requête refusée.');
+  }
+  return response;
+}
+async function action(fn){
+  if(busy) return;
+  busy = true; controls(); el('message').textContent = 'Traitement local…';
+  try { await fn(); } catch(error){ el('message').textContent = error.message; }
+  finally { busy = false; controls(); }
+}
+function profileChanged(){
+  const p = catalog.profiles.find(p => p.id === el('profile').value);
+  el('profileInfo').textContent = p ? p.adapter_requirement : 'Fichier brut sans hypothèse de puce, de région physique ou de protocole.';
+  el('support').textContent = p ? 'DOCUMENTÉ · NON VALIDÉ SUR BANC' : 'FICHIER UNIQUEMENT';
+  el('preconditions').replaceChildren();
+  (p?.capability.preconditions || []).forEach(text => { const li=document.createElement('li');li.textContent=text;el('preconditions').append(li); });
+  controls();
+}
+async function display(){
+  const data = await (await request('/api/chips/sessions/' + active)).json();
+  el('empty').hidden=true;el('snapshot').hidden=false;
+  el('source').textContent = data.source === 'SIMULATED' ? 'SIMULÉ — AUCUN MATÉRIEL LU' : 'FICHIER — ORIGINE MATÉRIELLE NON VÉRIFIÉE';
+  el('name').textContent=data.name;el('size').textContent=data.size_bytes+' octets · '+data.region;
+  el('selectedProfile').textContent=data.profile;el('hash').textContent=data.sha256;
+  const bytes=data.preview_hex.match(/../g)||[];
+  el('hex').textContent=Array.from({length:Math.ceil(bytes.length/16)},(_,r)=> (r*16).toString(16).padStart(6,'0')+'  '+bytes.slice(r*16,r*16+16).join(' ')).join('\n');
+  el('audit').textContent=JSON.stringify(data.audit,null,2);
+}
+async function acquire(path,options){
+  const old=active;
+  const data=await (await request(path,options)).json();active=data.id;
+  el('compareResult').textContent='';
+  await display();
+  if(old) await request('/api/chips/sessions/'+old,{method:'DELETE'});
+  el('message').textContent='Session chargée : '+data.source+'. Aucun accès matériel.';
+}
+el('import').onclick=()=>action(async()=>{
+  const file=el('file').files[0];if(!file)throw new Error('Choisir un fichier binaire.');
+  if(file.size>catalog.limits.max_file_bytes)throw new Error('Limite de 8 Mio dépassée.');
+  await acquire('/api/chips/import?'+new URLSearchParams({profile:el('profile').value,name:file.name}),{method:'POST',body:file});
+});
+el('simulate').onclick=()=>action(()=>acquire('/api/chips/simulate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile:el('profile').value})}));
+el('backup').onclick=()=>action(async()=>{
+  const response=await request('/api/chips/sessions/'+active+'/backup');
+  const url=URL.createObjectURL(await response.blob());
+  const link=document.createElement('a');link.href=url;link.download='conversion-pro-backup.zip';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);await display();
+  el('message').textContent='Archive vérifiée et téléchargement demandé. Vérifiez sa présence dans vos téléchargements.';
+});
+el('compare').onclick=()=>action(async()=>{
+  const file=el('candidate').files[0];if(!file)throw new Error('Choisir un second fichier binaire.');
+  if(file.size>catalog.limits.max_file_bytes)throw new Error('Limite de 8 Mio dépassée.');
+  const data=await (await request('/api/chips/sessions/'+active+'/compare',{method:'POST',body:file})).json();
+  el('compareResult').textContent=(data.identical?'Octets identiques.':'Différences : '+data.changed_byte_count+' octets.')+'\nComparaison de fichiers uniquement, aucune vérification matérielle.\n'+JSON.stringify(data.first_differences,null,2);
+  await display();el('message').textContent='Comparaison terminée, sans accès matériel.';
+});
+el('close').onclick=()=>action(async()=>{
+  await request('/api/chips/sessions/'+active,{method:'DELETE'});active=null;
+  el('snapshot').hidden=true;el('empty').hidden=false;el('message').textContent='Session temporaire fermée. Aucun fichier sur disque supprimé.';
+});
+el('profile').onchange=profileChanged;
+action(async()=>{
+  catalog=await (await request('/api/chips/catalog')).json();
+  [catalog.file_profile,...catalog.profiles].forEach(p=>el('profile').add(new Option(p.label,p.id)));
+  catalog.planned_families.forEach(f=>{const li=document.createElement('li');li.textContent=f.id+' — référence seulement';el('families').append(li);});
+  profileChanged();el('message').textContent='Prêt. Aucun accès matériel n’est actif.';
+});
+</script>
+</body>
+</html>

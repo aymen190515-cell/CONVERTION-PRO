@@ -29,7 +29,7 @@ client = TestClient(app)
 
 def read_memory():
     response = client.post(
-        "/api/advanced/read-memory"
+        "/api/advanced/read-memory?mode=SIMULATED"
     )
 
     assert response.status_code == 200
@@ -45,7 +45,10 @@ def test_read_memory_returns_expected_metadata():
     payload = read_memory()
 
     assert payload["read_only"] is True
-    assert payload["vehicle"] == "Jeep Wrangler 2012–2018"
+    assert payload["vehicle"] == "SIMULATED Jeep Wrangler 2012-2018 demo"
+    assert payload["source"] == "SIMULATED"
+    assert payload["hardware_access"] is False
+    assert payload["memory_read_supported"] is False
     assert payload["memory_type"] == "EEPROM"
     assert payload["memory_size"] == 1024
 
@@ -340,3 +343,39 @@ def test_diagnostics_reports_low_voltage(
         == "Voltage outside expected range."
         for event in payload["events"]
     )
+
+
+def test_hardware_read_fails_before_creating_programmer(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("No programmer may be constructed for an unsupported read")
+    monkeypatch.setattr(preview_module, "SimulatedProgrammer", forbidden)
+    for suffix in ("", "?mode=HARDWARE", "?mode=HARDWARE&memory_type=24C32&vehicle_key=unknown"):
+        response = client.post("/api/advanced/read-memory" + suffix)
+        assert response.status_code == 501
+        data = response.json()
+        assert data["success"] is False
+        assert data["hardware_access"] is False
+        assert data["memory_read_supported"] is False
+        assert "data_hex" not in data
+        assert "voltage" not in data
+
+
+def test_unknown_read_mode_does_not_fall_back_to_demo():
+    response = client.post("/api/advanced/read-memory?mode=FILE")
+    assert response.status_code == 422
+    assert "data_hex" not in response.json()
+
+
+def test_capability_endpoint_is_passive_and_does_not_claim_hardware_support(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Capability lookup must not create a programmer")
+    monkeypatch.setattr(preview_module, "SimulatedProgrammer", forbidden)
+    response = client.get("/api/advanced/memory-capability", params={
+        "chip": "ST_M24C32", "access": "DIRECT_I2C", "transport": "LINUX_I2C_DEV",
+        "mode": "RANDOM_SEQUENTIAL_READ",
+    })
+    assert response.status_code == 200
+    assert response.json()["status"] == "DOCUMENTED_UNVALIDATED"
+    assert response.json()["memory_read_supported"] is False
+    assert response.json()["hardware_access"] is False
+    assert "data_hex" not in response.json()

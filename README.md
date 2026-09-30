@@ -2,6 +2,25 @@
 
 Professional automotive instrument-cluster conversion platform.
 
+## Chip workspace (first milestone)
+
+Start the local preview as below and open <http://127.0.0.1:8000/chips>, or use
+the **Espace puces** button. Import a binary file or explicitly select the
+synthetic demo, export a ZIP backup with provenance and hash, and compare a
+second binary file. Sessions are temporary and require one server worker.
+No programmer is accessed. Physical read/write/erase/unlock are unavailable.
+See the [milestone scope and roadmap](docs/chip-platform-milestone-1.md).
+
+## Memory read support
+
+Read Memory does not currently read physical cluster memory. Hardware requests
+fail explicitly without returning demo bytes. Choose the explicitly labelled
+simulated Jeep demo, or Open File to inspect existing file bytes.
+
+The chip/interface/transport registry and experimental direct-I2C implementation
+are described in [Memory access status](docs/memory-access.md). No physical
+combination is qualified, and vLinker/CAN EEPROM reading is not implemented.
+
 ## Install and run locally (Windows / PowerShell)
 
 Use Python 3.12 or newer. Run these commands from the repository root
