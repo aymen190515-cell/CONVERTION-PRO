@@ -110,3 +110,11 @@ CONVERTION-PRO must never write unless:
 Every write must be followed by read-back verification.
 
 V0.1 uses synthetic test data only. It contains no real vehicle memory maps, security bypasses, or odometer-manipulation routines.
+
+## Codespaces : espace fichiers privé
+
+Le mode localhost reste le défaut. Le mode fichiers via une origine Codespaces
+exacte est optionnel et remplace les routes véhicule pour ce processus.
+Voir [périmètre, isolation et lancement](docs/codespaces-files.md) avant activation.
+Les fichiers importés sont transmis au serveur Codespaces ; aucun accès matériel
+n’est ajouté. Conserver le port privé.

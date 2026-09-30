@@ -11,7 +11,8 @@
 <body>
 <header><strong>CONVERSION PRO <span class="muted">/ Espace puces</span></strong><a href="/">Retour à l’aperçu véhicule</a></header>
 <main>
-<div class="eyebrow">Premier jalon · local · aucun accès matériel</div>
+<div class="eyebrow">Premier jalon · fichiers et simulation · aucun accès matériel</div>
+<p class="muted">__WORKSPACE_LOCATION__ Sessions privées à ce navigateur, expiration après 8 heures ou arrêt du serveur. Exportez avant de fermer.</p>
 <h1>Inspecter des octets, connaître leur origine.</h1>
 <p>Ouvrez un fichier ou une démonstration, préparez une sauvegarde et comparez un second fichier. Une sélection de puce ne constitue pas une identification physique.</p>
 <div class="warning">Lecture matérielle indisponible. Aucun programmateur qualifié n’est connecté par cet espace. Le vLinker n’est pas un programmateur multi-puces. Écriture, effacement et déverrouillage restent bloqués.</div>
@@ -46,7 +47,7 @@
 <label for="candidate">Comparer un second fichier binaire (ou memory.bin extrait du ZIP)</label><input type="file" id="candidate" accept=".bin,.eep,.rom,.dump,.dat">
 <button id="compare">Comparer les octets</button>
 <div id="compareResult" role="status"></div>
-<details><summary>Journal de cette session</summary><pre id="audit"></pre><p class="muted">Journal local temporaire, non signé. La sauvegarde inclut les événements disponibles au moment de sa génération.</p></details>
+<details><summary>Journal de cette session</summary><pre id="audit"></pre><p class="muted">Journal temporaire, non signé. La sauvegarde inclut les événements disponibles au moment de sa génération.</p></details>
 </section>
 </div>
 </div>
@@ -61,6 +62,9 @@ function controls(){
   el('profile').disabled = busy;
 }
 async function request(path, options){
+  options = options || {};
+  options.headers = {...options.headers, 'X-Chip-Workspace': '1'};
+  options.credentials = 'same-origin';
   const response = await fetch(path, options);
   if(!response.ok){
     const data = await response.json().catch(() => ({}));

@@ -12216,4 +12216,11 @@ async def preview():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    import os
+    if os.environ.get('CP_FILE_ORIGIN'):
+        from convertion_pro.ui.chip_api import files_app
+        from convertion_pro.ui.chip_access import configured_origin
+        configured_origin()  # Fail closed on malformed configuration before listening.
+        uvicorn.run(files_app, host="127.0.0.1", port=8000, proxy_headers=False)
+    else:
+        uvicorn.run(app, host="127.0.0.1", port=8000)

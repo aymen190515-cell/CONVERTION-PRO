@@ -113,6 +113,8 @@ def client(monkeypatch):
     app = FastAPI()
     app.include_router(chip_api.router)
     with TestClient(app, base_url='http://127.0.0.1', client=('127.0.0.1', 50000)) as client:
+        client.headers['X-Chip-Workspace'] = '1'
+        client.get('/chips')
         yield client
 
 
@@ -153,5 +155,5 @@ def test_remote_and_cross_origin_requests_are_rejected(client):
 def test_streaming_body_limit_and_invalid_session(client, monkeypatch):
     monkeypatch.setattr(chip_api, 'MAX_BYTES', 3)
     assert client.post('/api/chips/import', content=b'1234').status_code == 413
-    assert client.get('/api/chips/sessions/not-a-session').status_code == 422
+    assert client.get('/api/chips/sessions/not-a-session').status_code == 404
     assert client.post('/api/chips/import?profile=ST_M24C32', content=b'a').status_code == 422
