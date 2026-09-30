@@ -7,6 +7,9 @@ import json
 import uvicorn
 
 from convertion_pro.core.workflow import ConversionWorkflow
+from convertion_pro.core.vehicle_catalog import (
+    load_vehicle_catalog,
+)
 from convertion_pro.core.memory_layout import (
     detect_memory_organization,
 )
@@ -17,6 +20,14 @@ from convertion_pro.core.toyota_rh850 import (
 from convertion_pro.hardware.simulator import SimulatedProgrammer
 
 app = FastAPI(title="CONVERTION-PRO Preview")
+
+VEHICLE_CATALOG_DATA = load_vehicle_catalog()
+
+VEHICLE_CATALOG_JSON = json.dumps(
+    VEHICLE_CATALOG_DATA,
+    ensure_ascii=False,
+).replace("</", "<\\/")
+
 
 HTML = r"""
 <!DOCTYPE html>
@@ -2146,6 +2157,875 @@ footer{
     color:#61a8ff;
 }
 
+
+.memory-editor-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-left:auto;
+}
+
+.memory-modified-count{
+    color:var(--muted);
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.9px;
+    white-space:nowrap;
+}
+
+.memory-modified-count.active{
+    color:var(--amber);
+}
+
+.memory-editor-actions button{
+    padding:7px 11px;
+    font-size:11px;
+}
+
+.hex-byte{
+    cursor:pointer;
+    user-select:none;
+    transition:
+        background .12s ease,
+        color .12s ease;
+}
+
+.hex-byte:hover{
+    background:#142638;
+}
+
+.hex-byte.modified{
+    background:rgba(255,182,72,.16);
+    color:var(--amber);
+    font-weight:800;
+}
+
+.hex-byte.annotated{
+    box-shadow:
+        inset 0 0 0 1px
+        rgba(22,135,255,.5);
+}
+
+.hex-byte-editor{
+    width:30px;
+    height:24px;
+    padding:0;
+    border:1px solid var(--blue);
+    border-radius:4px;
+    outline:none;
+    background:#07111d;
+    color:#fff;
+    text-align:center;
+    font-family:monospace;
+    font-size:12px;
+    font-weight:800;
+    text-transform:uppercase;
+}
+
+.hex-byte-editor.invalid{
+    border-color:var(--red);
+    color:var(--red);
+}
+
+.hex-offset{
+    color:var(--blue);
+    font-family:monospace;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.hex-ascii{
+    color:#7f8da0;
+    font-family:monospace;
+    letter-spacing:1px;
+    white-space:pre;
+}
+
+.hex-empty{
+    opacity:.2;
+}
+
+@media(max-width:900px){
+    .memory-editor-actions{
+        width:100%;
+        margin-left:0;
+        flex-wrap:wrap;
+    }
+}
+
+
+.compare-file-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+    gap:16px;
+    margin-bottom:16px;
+}
+
+.compare-file-card{
+    padding:20px;
+}
+
+.compare-file-title{
+    color:var(--blue);
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:1.4px;
+    margin-bottom:14px;
+}
+
+.compare-file-meta{
+    margin-top:16px;
+    display:grid;
+    gap:6px;
+}
+
+.compare-file-meta small{
+    color:var(--muted);
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+    margin-top:9px;
+}
+
+.compare-file-meta strong,
+.compare-file-meta code{
+    overflow-wrap:anywhere;
+}
+
+.compare-result-card{
+    padding:20px;
+}
+
+.compare-summary{
+    display:grid;
+    grid-template-columns:
+        repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin-bottom:18px;
+}
+
+.compare-summary > div{
+    padding:14px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--panel3);
+}
+
+.compare-summary small{
+    display:block;
+    color:var(--muted);
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+    margin-bottom:7px;
+}
+
+.compare-identical{
+    color:var(--green);
+}
+
+.compare-different{
+    color:var(--amber);
+}
+
+.compare-diff-shell{
+    max-height:480px;
+    overflow:auto;
+    border:1px solid var(--border);
+    border-radius:8px;
+}
+
+.compare-diff-table{
+    width:100%;
+    border-collapse:collapse;
+    font-family:monospace;
+}
+
+.compare-diff-table th,
+.compare-diff-table td{
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    text-align:left;
+}
+
+.compare-diff-table th{
+    position:sticky;
+    top:0;
+    z-index:2;
+    background:var(--panel2);
+    color:var(--muted);
+    font-size:10px;
+}
+
+.compare-diff-table td:first-child{
+    color:var(--blue);
+    font-weight:800;
+}
+
+.compare-diff-table td:nth-child(2),
+.compare-diff-table td:nth-child(3){
+    color:var(--amber);
+    font-weight:800;
+}
+
+@media(max-width:800px){
+    .compare-file-grid,
+    .compare-summary{
+        grid-template-columns:1fr;
+    }
+}
+
+
+.compare-hex-title{
+    margin-top:22px;
+    margin-bottom:10px;
+    color:var(--blue);
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:1.4px;
+}
+
+.compare-hex-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+}
+
+.compare-hex-panel{
+    min-width:0;
+}
+
+.compare-hex-panel-title{
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-bottom:0;
+    border-radius:8px 8px 0 0;
+    background:var(--panel2);
+    color:var(--text);
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.compare-hex-panel-title span{
+    display:block;
+    margin-top:4px;
+    color:var(--muted);
+    font-weight:600;
+    letter-spacing:0;
+    overflow-wrap:anywhere;
+}
+
+.compare-hex-scroll{
+    height:520px;
+    overflow:auto;
+    border:1px solid var(--border);
+    border-radius:0 0 8px 8px;
+    background:var(--panel3);
+}
+
+.compare-hex-table{
+    min-width:780px;
+}
+
+.compare-hex-table thead th{
+    position:sticky;
+    top:0;
+    z-index:3;
+    background:var(--panel2);
+}
+
+.compare-byte-diff{
+    background:
+        rgba(255,182,72,.18) !important;
+    color:
+        var(--amber) !important;
+    font-weight:900;
+    box-shadow:
+        inset 0 0 0 1px
+        rgba(255,182,72,.45);
+}
+
+.compare-byte{
+    cursor:default;
+}
+
+@media(max-width:1050px){
+    .compare-hex-grid{
+        grid-template-columns:1fr;
+    }
+
+    .compare-hex-scroll{
+        height:360px;
+    }
+}
+
+
+.memory-operation-warning{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:16px;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--panel2);
+}
+
+.memory-operation-warning strong{
+    color:var(--amber);
+    font-size:11px;
+    letter-spacing:1px;
+}
+
+.memory-operation-warning span{
+    color:var(--muted);
+    font-size:12px;
+}
+
+.memory-operation-card{
+    padding:20px;
+}
+
+.memory-operation-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+    gap:14px;
+    margin-bottom:20px;
+}
+
+.memory-operation-grid > div{
+    min-width:0;
+    padding:14px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--panel3);
+}
+
+.memory-operation-grid small{
+    display:block;
+    margin-bottom:6px;
+    color:var(--muted);
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.memory-operation-grid strong,
+.memory-operation-grid code{
+    overflow-wrap:anywhere;
+}
+
+.memory-operation-empty{
+    padding:18px;
+    border:1px dashed var(--border);
+    border-radius:8px;
+    color:var(--muted);
+    text-align:center;
+}
+
+.programming-progress-shell{
+    height:10px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    border-radius:20px;
+    background:#07111d;
+}
+
+.programming-progress-bar{
+    width:0;
+    height:100%;
+    background:var(--blue);
+    transition:width .18s ease;
+}
+
+.programming-progress-row{
+    display:flex;
+    justify-content:space-between;
+    margin-top:8px;
+    color:var(--muted);
+    font-size:10px;
+    letter-spacing:.8px;
+}
+
+.memory-operation-button{
+    margin-top:18px;
+}
+
+.memory-operation-result,
+.verify-result{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    margin-top:18px;
+    padding:15px;
+    border:1px solid var(--border);
+    border-radius:8px;
+}
+
+.memory-operation-result.success,
+.verify-result.success{
+    border-color:rgba(42,190,120,.45);
+    background:rgba(42,190,120,.08);
+}
+
+.verify-result.failure{
+    border-color:rgba(255,182,72,.5);
+    background:rgba(255,182,72,.08);
+}
+
+.memory-operation-result.success strong,
+.verify-result.success strong{
+    color:var(--green);
+}
+
+.verify-result.failure strong{
+    color:var(--amber);
+}
+
+.memory-operation-result span,
+.verify-result span{
+    color:var(--muted);
+    font-size:12px;
+}
+
+.verify-differences{
+    margin-top:18px;
+    overflow:auto;
+    border:1px solid var(--border);
+    border-radius:8px;
+}
+
+.verify-differences .memory-info-title{
+    padding:12px;
+}
+
+@media(max-width:800px){
+    .memory-operation-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+
+.recent-grid button.recent{
+    width:100%;
+    text-align:left;
+    font:inherit;
+}
+
+.recent-empty{
+    cursor:default;
+    opacity:.7;
+}
+
+.recent-empty:hover{
+    transform:none;
+}
+
+
+.workspace-choice-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+    gap:18px;
+}
+
+.workspace-choice{
+    padding:24px;
+}
+
+.workspace-choice-kicker{
+    margin-bottom:10px;
+    color:var(--blue);
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1.2px;
+}
+
+.workspace-choice-kicker.technician{
+    color:var(--muted);
+}
+
+.workspace-choice h2{
+    margin:0 0 10px;
+}
+
+.workspace-choice p{
+    min-height:54px;
+    margin:0 0 20px;
+    color:var(--muted);
+    line-height:1.55;
+}
+
+.workspace-choice-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.vehicle-context-preview{
+    margin-bottom:16px;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    background:var(--panel3);
+    color:var(--muted);
+    font-size:11px;
+}
+
+
+.processor-selector-card{
+    max-width:1100px;
+}
+
+.processor-search-shell{
+    margin-top:8px;
+}
+
+.processor-search-shell input{
+    width:100%;
+    padding:13px 14px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    outline:none;
+    background:var(--panel3);
+    color:var(--text);
+    font:inherit;
+}
+
+.processor-search-shell input:focus{
+    border-color:var(--blue);
+}
+
+.processor-selection-summary{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:14px;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--panel3);
+    color:var(--muted);
+}
+
+.processor-selection-summary small{
+    color:var(--blue);
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.processor-selection-summary span{
+    color:var(--muted);
+    font-size:11px;
+}
+
+.processor-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin-top:16px;
+}
+
+.processor-card{
+    min-height:140px;
+    padding:16px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--panel3);
+    color:var(--text);
+    text-align:left;
+    cursor:pointer;
+}
+
+.processor-card:hover,
+.processor-card.active{
+    border-color:var(--blue);
+    background:#0d1b2a;
+}
+
+.processor-card small,
+.processor-card strong,
+.processor-card span{
+    display:block;
+}
+
+.processor-card small{
+    margin-bottom:7px;
+    color:var(--blue);
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.processor-card strong{
+    font-size:15px;
+}
+
+.processor-card span{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:10px;
+}
+
+.processor-card p{
+    margin:10px 0 0;
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.4;
+}
+
+.processor-empty{
+    grid-column:1/-1;
+    padding:25px;
+    border:1px dashed var(--border);
+    border-radius:8px;
+    color:var(--muted);
+    text-align:center;
+}
+
+.processor-selector-actions{
+    margin-top:18px;
+    display:flex;
+    justify-content:flex-end;
+}
+
+
+.advanced-context-banner{
+    margin-bottom:16px;
+    padding:12px 15px;
+    border:1px solid var(--border);
+    border-left:3px solid var(--blue);
+    border-radius:8px;
+    background:var(--panel2);
+}
+
+.advanced-context-banner > div{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.advanced-context-banner small{
+    color:var(--blue);
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.advanced-context-banner strong{
+    color:var(--text);
+}
+
+.advanced-context-banner span{
+    color:var(--muted);
+    font-size:11px;
+}
+
+
+@media(max-width:850px){
+    .workspace-choice-grid{
+        grid-template-columns:1fr;
+    }
+
+    .processor-grid{
+        grid-template-columns:
+            repeat(2,minmax(0,1fr));
+    }
+}
+
+@media(max-width:600px){
+    .processor-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+
+.home-workspace-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+    gap:18px;
+    align-items:stretch;
+}
+
+.home-workspace-card{
+    min-height:420px;
+    display:flex;
+    flex-direction:column;
+}
+
+.home-card-kicker{
+    color:var(--blue);
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1.2px;
+    margin-bottom:8px;
+}
+
+.home-card-kicker.technician{
+    color:var(--muted);
+}
+
+.home-workspace-card h2{
+    margin:0 0 10px;
+}
+
+.home-card-description{
+    margin:0 0 22px;
+    color:var(--muted);
+    line-height:1.55;
+}
+
+.selector-card .recent-title{
+    margin-top:24px;
+}
+
+.home-advanced-card{
+    justify-content:flex-start;
+}
+
+.home-advanced-visual{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    margin-top:8px;
+    padding:18px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--panel3);
+}
+
+.home-advanced-icon{
+    width:42px;
+    height:42px;
+    display:grid;
+    place-items:center;
+    border:1px solid var(--border);
+    border-radius:9px;
+    color:var(--blue);
+    font-size:24px;
+    flex:0 0 auto;
+}
+
+.home-advanced-visual strong,
+.home-advanced-visual span{
+    display:block;
+}
+
+.home-advanced-visual span{
+    margin-top:6px;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.5;
+}
+
+.home-card-actions{
+    margin-top:auto;
+    padding-top:22px;
+}
+
+@media(max-width:900px){
+    .home-workspace-grid{
+        grid-template-columns:1fr;
+    }
+
+    .home-workspace-card{
+        min-height:unset;
+    }
+}
+
+
+.vehicle-memory-conversion{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+    padding:15px 16px;
+    border:1px solid var(--border);
+    border-left:3px solid var(--blue);
+    border-radius:9px;
+    background:var(--panel2);
+}
+
+.vehicle-memory-conversion-copy{
+    min-width:220px;
+}
+
+.vehicle-memory-conversion-copy small,
+.vehicle-memory-conversion-copy strong,
+.vehicle-memory-conversion-copy span{
+    display:block;
+}
+
+.vehicle-memory-conversion-copy small{
+    color:var(--blue);
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.vehicle-memory-conversion-copy strong{
+    margin-top:4px;
+    font-size:14px;
+}
+
+.vehicle-memory-conversion-copy span{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:11px;
+}
+
+.vehicle-memory-conversion-controls{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.vehicle-memory-conversion-result{
+    width:100%;
+    display:flex;
+    gap:8px;
+    align-items:center;
+    padding-top:10px;
+    border-top:1px solid var(--border);
+}
+
+.vehicle-memory-conversion-result strong{
+    font-size:11px;
+}
+
+.vehicle-memory-conversion-result span{
+    color:var(--muted);
+    font-size:11px;
+}
+
+.vehicle-memory-conversion-result.success strong{
+    color:var(--green);
+}
+
+.vehicle-memory-conversion-result.failure strong{
+    color:var(--amber);
+}
+
+@media(max-width:750px){
+    .vehicle-memory-conversion{
+        align-items:stretch;
+    }
+
+    .vehicle-memory-conversion-controls{
+        width:100%;
+    }
+}
+
 </style>
 </head>
 
@@ -2159,7 +3039,7 @@ footer{
     </div>
 
     <div class="nav">
-        <button onclick="show('select')">Home</button>
+        <button onclick="openHome()">Home</button>
         <button>Settings</button>
         <button>Help</button>
     </div>
@@ -2181,7 +3061,21 @@ footer{
         </div>
     </div>
 
-    <div class="selector-card card card-pad">
+    <div class="home-workspace-grid">
+
+    <div class="selector-card card card-pad home-workspace-card">
+
+        <div class="home-card-kicker">
+            VEHICLE WORKFLOW
+        </div>
+
+        <h2>Vehicle</h2>
+
+        <p class="home-card-description">
+            Select a supported vehicle and choose
+            automatic conversion or vehicle-aware
+            advanced tools.
+        </p>
 
         <div class="selector-grid">
 
@@ -2215,17 +3109,10 @@ footer{
 
         </div>
 
-        <div class="selector-actions" style="gap:10px">
-            <button
-                class="file-open-button"
-                onclick="openFileConversion()"
-            >
-                Open File
-            </button>
-
+        <div class="selector-actions">
             <button
                 class="primary"
-                onclick="openConnectionGuide()"
+                onclick="openVehicleWorkspace()"
             >
                 Continue →
             </button>
@@ -2233,58 +3120,228 @@ footer{
 
         <div class="recent-title">Recent Vehicles</div>
 
-        <div class="recent-grid">
-
-            <div class="recent" onclick="show('guide')">
-                <small>JEEP</small>
-                <strong>Wrangler 2012–2018</strong>
-            </div>
-
-            <div class="recent">
-                <small>TOYOTA</small>
-                <strong>RAV4</strong>
-            </div>
-
-            <div class="recent">
-                <small>FORD</small>
-                <strong>F-150</strong>
-            </div>
-
-            <div class="recent">
-                <small>CHEVROLET</small>
-                <strong>Silverado</strong>
-            </div>
-
+        <div
+            class="recent-grid"
+            id="recentVehicleGrid"
+        >
         </div>
 
     </div>
 
-    <div class="technician-section">
+    <div class="card card-pad home-workspace-card home-advanced-card">
 
-        <div class="technician-section-label">
+        <div class="home-card-kicker technician">
             TECHNICIAN MODE
         </div>
 
-        <button
-            class="technician-panel"
-            onclick="openAdvancedTools('select')"
-        >
-            <div class="technician-panel-icon">⌁</div>
+        <h2>Advanced Tools</h2>
 
-            <div class="technician-panel-copy">
-                <strong>Advanced Tools</strong>
+        <p class="home-card-description">
+            Work directly with processors, memory chips,
+            raw dumps, diagnostics and manual programming
+            without selecting a vehicle.
+        </p>
+
+        <div class="home-advanced-visual">
+            <div class="home-advanced-icon">⌁</div>
+
+            <div>
+                <strong>Generic Advanced Workspace</strong>
                 <span>
-                    Memory, diagnostics and manual cluster operations.
+                    Processor / chip selection · Hex editor ·
+                    Compare · Read · Write · Verify
                 </span>
             </div>
+        </div>
 
-            <div class="technician-panel-arrow">→</div>
-        </button>
+        <div class="home-card-actions">
+            <button
+                class="primary"
+                onclick="openGenericAdvancedSelector()"
+            >
+                Open Advanced Tools →
+            </button>
+        </div>
+
+    </div>
 
     </div>
 
 </section>
 
+
+
+
+<!-- VEHICLE WORKSPACE -->
+
+<section id="vehicleWorkspace" class="screen">
+
+    <button class="back" onclick="show('select')">
+        ← Select Vehicle
+    </button>
+
+    <div class="heading-row">
+        <div>
+            <div
+                class="eyebrow"
+                id="vehicleWorkspaceMake"
+            >
+                VEHICLE
+            </div>
+
+            <h1 id="vehicleWorkspaceName">
+                Vehicle Workspace
+            </h1>
+
+            <p class="subtitle">
+                Choose how you want to work with this vehicle.
+            </p>
+        </div>
+    </div>
+
+
+    <div class="workspace-choice-grid">
+
+        <div class="workspace-choice card">
+
+            <div class="workspace-choice-kicker">
+                RECOMMENDED
+            </div>
+
+            <h2>Automatic Conversion</h2>
+
+            <p>
+                Use the known vehicle profile for guided
+                reading, conversion and verification.
+            </p>
+
+            <div class="workspace-choice-actions">
+
+                <button
+                    class="primary"
+                    onclick="startVehicleAutomaticHardware()"
+                >
+                    Connect Cluster →
+                </button>
+
+                <button
+                    class="file-open-button"
+                    onclick="startVehicleAutomaticFile()"
+                >
+                    Open File
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="workspace-choice card">
+
+            <div class="workspace-choice-kicker technician">
+                TECHNICIAN MODE
+            </div>
+
+            <h2>Advanced Tools</h2>
+
+            <p>
+                Work manually with memory, hex data,
+                diagnostics and programming while keeping
+                this vehicle profile active.
+            </p>
+
+            <div
+                class="vehicle-context-preview"
+                id="vehicleAdvancedContextPreview"
+            >
+                Vehicle profile will remain active.
+            </div>
+
+            <button
+                class="secondary"
+                onclick="openVehicleAdvancedTools()"
+            >
+                Open Advanced Tools →
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- GENERIC ADVANCED SELECTOR -->
+
+<section id="genericAdvancedSelector" class="screen">
+
+    <button class="back" onclick="openHome()">
+        ← Home
+    </button>
+
+    <div class="heading-row">
+        <div>
+            <div class="eyebrow">
+                TECHNICIAN MODE
+            </div>
+
+            <h1>Advanced Tools</h1>
+
+            <p class="subtitle">
+                Work directly with a processor, memory chip
+                or unknown raw memory without selecting a vehicle.
+            </p>
+        </div>
+    </div>
+
+
+    <div class="processor-selector-card card card-pad">
+
+        <label>PROCESSOR / MEMORY CHIP</label>
+
+        <div class="processor-search-shell">
+            <input
+                id="processorSearch"
+                type="search"
+                placeholder="Search processor or chip..."
+                autocomplete="off"
+                oninput="renderProcessorCatalog()"
+            >
+        </div>
+
+
+        <div
+            class="processor-selection-summary"
+            id="processorSelectionSummary"
+        >
+            No processor selected.
+        </div>
+
+
+        <div
+            class="processor-grid"
+            id="processorGrid"
+        >
+        </div>
+
+
+        <div class="processor-selector-actions">
+
+            <button
+                class="primary"
+                id="openGenericAdvancedButton"
+                onclick="openSelectedGenericAdvancedTools()"
+                disabled
+            >
+                Open Advanced Workspace →
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
 
 
 <!-- FILE CONVERSION -->
@@ -3026,6 +4083,25 @@ footer{
 
 <section id="advanced" class="screen">
 
+    <div
+        class="advanced-context-banner"
+        id="advancedContextBanner"
+    >
+        <div>
+            <small id="advancedContextMode">
+                TECHNICIAN MODE
+            </small>
+
+            <strong id="advancedContextTitle">
+                Generic Advanced Workspace
+            </strong>
+
+            <span id="advancedContextDetail">
+                No vehicle profile active.
+            </span>
+        </div>
+    </div>
+
     <button
         class="back"
         onclick="closeAdvancedTools()"
@@ -3050,12 +4126,18 @@ footer{
             <small>Read cluster memory and create a local dump.</small>
         </button>
 
-        <button class="tool tool-disabled" disabled>
+        <button
+            class="tool tool-ready"
+            data-tool="write-memory"
+        >
             <strong>Write Memory</strong>
-            <small>Protected manual memory programming operation.</small>
+            <small>Program the currently loaded memory image.</small>
         </button>
 
-        <button class="tool tool-disabled" disabled>
+        <button
+            class="tool tool-ready"
+            data-tool="verify-memory"
+        >
             <strong>Verify Memory</strong>
             <small>Compare programmed data with read-back data.</small>
         </button>
@@ -3065,17 +4147,20 @@ footer{
             <small>Read hardware, software and profile identifiers.</small>
         </button>
 
-        <button class="tool tool-disabled" disabled>
+        <button
+            class="tool tool-ready"
+            data-tool="open-memory-file"
+        >
             <strong>Open File</strong>
             <small>Load a supported cluster data file.</small>
         </button>
 
-        <button class="tool tool-disabled" disabled>
-            <strong>Save File</strong>
-            <small>Save currently loaded memory data.</small>
-        </button>
 
-        <button class="tool tool-disabled" disabled>
+
+        <button
+            class="tool tool-ready"
+            data-tool="compare-files"
+        >
             <strong>Compare Files</strong>
             <small>Inspect differences between two memory files.</small>
         </button>
@@ -3095,6 +4180,472 @@ footer{
 </section>
 
 
+
+
+
+
+<!-- WRITE MEMORY -->
+
+<section id="writeMemory" class="screen">
+
+    <button
+        class="back"
+        onclick="show('advanced')"
+    >
+        ← Advanced Tools
+    </button>
+
+    <div class="heading-row">
+        <div>
+            <div class="eyebrow">
+                TECHNICIAN MODE · MEMORY PROGRAMMING
+            </div>
+
+            <h1>Write Memory</h1>
+
+            <p class="subtitle">
+                Program the currently loaded memory image.
+            </p>
+        </div>
+    </div>
+
+
+    <div class="memory-operation-warning">
+        <strong>SIMULATION ONLY</strong>
+        <span>
+            No physical memory will be programmed.
+        </span>
+    </div>
+
+
+    <div class="card memory-operation-card">
+
+        <div class="memory-operation-grid">
+
+            <div>
+                <small>SOURCE</small>
+                <strong id="writeMemorySource">
+                    ---
+                </strong>
+            </div>
+
+            <div>
+                <small>FILE</small>
+                <strong id="writeMemoryFilename">
+                    ---
+                </strong>
+            </div>
+
+            <div>
+                <small>MEMORY SIZE</small>
+                <strong id="writeMemorySize">
+                    ---
+                </strong>
+            </div>
+
+            <div>
+                <small>SHA-256</small>
+                <code id="writeMemorySha">
+                    ---
+                </code>
+            </div>
+
+        </div>
+
+
+        <div
+            class="memory-operation-empty"
+            id="writeMemoryEmpty"
+        >
+            No memory image is currently loaded.
+            Open or read a memory file first.
+        </div>
+
+
+        <div
+            id="writeMemoryControls"
+            style="display:none"
+        >
+
+            <div class="programming-progress-shell">
+                <div
+                    class="programming-progress-bar"
+                    id="writeMemoryProgressBar"
+                ></div>
+            </div>
+
+            <div class="programming-progress-row">
+                <strong id="writeMemoryProgressText">
+                    READY
+                </strong>
+
+                <span id="writeMemoryProgressPercent">
+                    0%
+                </span>
+            </div>
+
+
+            <button
+                class="primary memory-operation-button"
+                id="writeMemoryStartButton"
+                onclick="startSimulatedMemoryWrite()"
+            >
+                Start Simulated Write
+            </button>
+
+        </div>
+
+
+        <div
+            class="memory-operation-result"
+            id="writeMemoryResult"
+            style="display:none"
+        >
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- VERIFY MEMORY -->
+
+<section id="verifyMemory" class="screen">
+
+    <button
+        class="back"
+        onclick="show('advanced')"
+    >
+        ← Advanced Tools
+    </button>
+
+    <div class="heading-row">
+        <div>
+            <div class="eyebrow">
+                TECHNICIAN MODE · READ-BACK VERIFICATION
+            </div>
+
+            <h1>Verify Memory</h1>
+
+            <p class="subtitle">
+                Compare the active memory image with programmed read-back data.
+            </p>
+        </div>
+    </div>
+
+
+    <div class="memory-operation-warning">
+        <strong>SIMULATION ONLY</strong>
+        <span>
+            Verification uses simulated programmed memory.
+        </span>
+    </div>
+
+
+    <div class="card memory-operation-card">
+
+        <div class="memory-operation-grid">
+
+            <div>
+                <small>EXPECTED SIZE</small>
+                <strong id="verifyExpectedSize">
+                    ---
+                </strong>
+            </div>
+
+            <div>
+                <small>READ-BACK SIZE</small>
+                <strong id="verifyReadbackSize">
+                    ---
+                </strong>
+            </div>
+
+            <div>
+                <small>EXPECTED SHA-256</small>
+                <code id="verifyExpectedSha">
+                    ---
+                </code>
+            </div>
+
+            <div>
+                <small>READ-BACK SHA-256</small>
+                <code id="verifyReadbackSha">
+                    ---
+                </code>
+            </div>
+
+        </div>
+
+
+        <div
+            class="memory-operation-empty"
+            id="verifyMemoryEmpty"
+        >
+            No simulated write is available yet.
+            Run Write Memory first.
+        </div>
+
+
+        <div
+            id="verifyMemoryControls"
+            style="display:none"
+        >
+            <button
+                class="primary memory-operation-button"
+                id="verifyMemoryStartButton"
+                onclick="verifySimulatedMemory()"
+            >
+                Verify Memory
+            </button>
+        </div>
+
+
+        <div
+            class="verify-result"
+            id="verifyMemoryResult"
+            style="display:none"
+        >
+        </div>
+
+
+        <div
+            class="verify-differences"
+            id="verifyMemoryDifferences"
+            style="display:none"
+        >
+            <div class="memory-info-title">
+                FIRST DIFFERENCES
+            </div>
+
+            <table class="compare-diff-table">
+                <thead>
+                    <tr>
+                        <th>OFFSET</th>
+                        <th>EXPECTED</th>
+                        <th>READ-BACK</th>
+                    </tr>
+                </thead>
+
+                <tbody id="verifyDifferenceBody">
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- COMPARE FILES -->
+
+<section id="compareFiles" class="screen">
+
+    <button
+        class="back"
+        onclick="show('advanced')"
+    >
+        ← Advanced Tools
+    </button>
+
+    <div class="heading-row">
+        <div>
+            <div class="eyebrow">
+                TECHNICIAN MODE · FILE ANALYSIS
+            </div>
+
+            <h1>Compare Files</h1>
+
+            <p class="subtitle">
+                Compare two memory images byte-for-byte.
+            </p>
+        </div>
+    </div>
+
+
+    <div class="compare-file-grid">
+
+        <div class="card compare-file-card">
+            <div class="compare-file-title">
+                FILE A
+            </div>
+
+            <button
+                class="secondary"
+                onclick="selectCompareFile('A')"
+            >
+                Select File A
+            </button>
+
+            <div class="compare-file-meta">
+                <small>NAME</small>
+                <strong id="compareFileAName">
+                    No file selected
+                </strong>
+
+                <small>SIZE</small>
+                <strong id="compareFileASize">
+                    ---
+                </strong>
+
+                <small>SHA-256</small>
+                <code id="compareFileASha">
+                    ---
+                </code>
+            </div>
+        </div>
+
+
+        <div class="card compare-file-card">
+            <div class="compare-file-title">
+                FILE B
+            </div>
+
+            <button
+                class="secondary"
+                onclick="selectCompareFile('B')"
+            >
+                Select File B
+            </button>
+
+            <div class="compare-file-meta">
+                <small>NAME</small>
+                <strong id="compareFileBName">
+                    No file selected
+                </strong>
+
+                <small>SIZE</small>
+                <strong id="compareFileBSize">
+                    ---
+                </strong>
+
+                <small>SHA-256</small>
+                <code id="compareFileBSha">
+                    ---
+                </code>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div
+        class="card compare-result-card"
+        id="compareResultCard"
+        style="display:none"
+    >
+
+        <div class="compare-summary">
+
+            <div>
+                <small>RESULT</small>
+                <strong id="compareResultStatus">
+                    ---
+                </strong>
+            </div>
+
+            <div>
+                <small>DIFFERENT BYTES</small>
+                <strong id="compareDifferenceCount">
+                    0
+                </strong>
+            </div>
+
+            <div>
+                <small>SIZE MATCH</small>
+                <strong id="compareSizeMatch">
+                    ---
+                </strong>
+            </div>
+
+        </div>
+
+
+        <div class="compare-hex-title">
+            HEX COMPARISON
+        </div>
+
+        <div class="compare-hex-grid">
+
+            <div class="compare-hex-panel">
+                <div class="compare-hex-panel-title">
+                    FILE A
+                    <span id="compareHexAName"></span>
+                </div>
+
+                <div
+                    class="compare-hex-scroll"
+                    id="compareHexScrollA"
+                >
+                    <table class="hex-table compare-hex-table">
+                        <thead id="compareHexHeadA"></thead>
+                        <tbody id="compareHexBodyA"></tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <div class="compare-hex-panel">
+                <div class="compare-hex-panel-title">
+                    FILE B
+                    <span id="compareHexBName"></span>
+                </div>
+
+                <div
+                    class="compare-hex-scroll"
+                    id="compareHexScrollB"
+                >
+                    <table class="hex-table compare-hex-table">
+                        <thead id="compareHexHeadB"></thead>
+                        <tbody id="compareHexBodyB"></tbody>
+                    </table>
+                </div>
+            </div>
+
+
+        <div
+            class="compare-diff-shell"
+            id="compareDiffShell"
+        >
+
+            <table class="compare-diff-table">
+
+                <thead>
+                    <tr>
+                        <th>OFFSET</th>
+                        <th>FILE A</th>
+                        <th>FILE B</th>
+                    </tr>
+                </thead>
+
+                <tbody id="compareDiffBody">
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<input
+    type="file"
+    id="compareFileInputA"
+    accept=".bin,.eep,.rom,.dump,.dat"
+    style="display:none"
+>
+
+<input
+    type="file"
+    id="compareFileInputB"
+    accept=".bin,.eep,.rom,.dump,.dat"
+    style="display:none"
+>
 
 
 <!-- SYSTEM DIAGNOSTICS -->
@@ -3623,13 +5174,41 @@ footer{
                             EEPROM
                         </span>
 
-                        <span class="memory-badge readonly">
-                            READ ONLY
+                        <span
+                            class="memory-badge"
+                            id="memoryModeBadge"
+                        >
+                            EDITABLE
                         </span>
 
                         <span class="memory-badge readonly" id="memorySizeBadge">
                             --- BYTES
                         </span>
+                    </div>
+
+                    <div class="memory-editor-actions">
+                        <span
+                            class="memory-modified-count"
+                            id="memoryModifiedCount"
+                        >
+                            0 BYTES MODIFIED
+                        </span>
+
+                        <button
+                            class="secondary"
+                            id="memoryRevertButton"
+                            onclick="revertMemoryChanges()"
+                            disabled
+                        >
+                            Revert Changes
+                        </button>
+
+                        <button
+                            class="primary"
+                            onclick="saveActiveMemoryFile()"
+                        >
+                            Save As
+                        </button>
                     </div>
 
                     <div class="memory-search">
@@ -3645,6 +5224,61 @@ footer{
                         </button>
                     </div>
 
+                </div>
+
+                <div
+                    class="vehicle-memory-conversion"
+                    id="vehicleMemoryConversion"
+                    style="display:none"
+                >
+                    <div class="vehicle-memory-conversion-copy">
+                        <small>VEHICLE PROFILE CONVERSION</small>
+
+                        <strong id="vehicleMemoryConversionTitle">
+                            Convert Cluster
+                        </strong>
+
+                        <span id="vehicleMemoryConversionProfile">
+                            ---
+                        </span>
+                    </div>
+
+                    <div class="vehicle-memory-conversion-controls">
+
+                        <button
+                            id="vehicleConversionDirectionA"
+                            class="file-direction-button active"
+                            type="button"
+                            onclick="setAdvancedConversionDirection('A')"
+                        >
+                            KM → MILES
+                        </button>
+
+                        <button
+                            id="vehicleConversionDirectionB"
+                            class="file-direction-button"
+                            type="button"
+                            onclick="setAdvancedConversionDirection('B')"
+                        >
+                            MILES → KM
+                        </button>
+
+                        <button
+                            id="advancedConvertClusterButton"
+                            class="primary"
+                            type="button"
+                            onclick="convertAdvancedCluster()"
+                        >
+                            Convert Cluster
+                        </button>
+
+                    </div>
+
+                    <div
+                        class="vehicle-memory-conversion-result"
+                        id="vehicleMemoryConversionResult"
+                        style="display:none"
+                    ></div>
                 </div>
 
                 <div class="hex-shell" id="hexShell">
@@ -3735,28 +5369,906 @@ footer{
 
 </div>
 
+
+<div id="cp-vlinker-panel" style="position:fixed;right:16px;bottom:16px;z-index:9999;
+background:#101924;color:#f4f7fb;border:1px solid #26384b;border-radius:10px;
+padding:12px;max-width:310px;box-shadow:0 8px 24px #0008">
+  <button id="cp-vlinker-button" type="button" onclick="cpTestVLinker()"
+    style="background:#1687ff;color:white;border:0;border-radius:7px;padding:9px 12px">
+    Tester le vLinker USB
+  </button>
+  <div id="cp-vlinker-status" role="status" style="margin-top:8px;font-size:13px">
+    Aucun câble testé
+  </div>
+</div>
 <script>
 
 let advancedToolsReturnScreen = 'select';
 
-function openAdvancedTools(returnScreen){
-    advancedToolsReturnScreen =
-        returnScreen || 'select';
+let workspaceMode = null;
+let vehicleContext = null;
+let hardwareContext = null;
 
-    show('advanced');
+
+const PROCESSOR_CATALOG = [
+    {
+        key: "unknown_raw",
+        category: "RAW",
+        family: "Unknown",
+        label: "Unknown / Raw Memory",
+        description:
+            "Open files and memory without a known processor profile."
+    },
+    {
+        key: "rh850_r7f701401",
+        category: "MCU / FLASH",
+        family: "Renesas RH850",
+        label: "R7F701401",
+        description:
+            "Renesas RH850 processor."
+    },
+    {
+        key: "93c66",
+        category: "EEPROM",
+        family: "93Cxx",
+        label: "93C66",
+        description:
+            "Serial EEPROM."
+    },
+    {
+        key: "93c56",
+        category: "EEPROM",
+        family: "93Cxx",
+        label: "93C56",
+        description:
+            "Serial EEPROM."
+    },
+    {
+        key: "93c86",
+        category: "EEPROM",
+        family: "93Cxx",
+        label: "93C86",
+        description:
+            "Serial EEPROM."
+    },
+    {
+        key: "24c32",
+        category: "EEPROM",
+        family: "24Cxx",
+        label: "24C32",
+        description:
+            "I²C EEPROM."
+    },
+    {
+        key: "24c64",
+        category: "EEPROM",
+        family: "24Cxx",
+        label: "24C64",
+        description:
+            "I²C EEPROM."
+    },
+    {
+        key: "24c128",
+        category: "EEPROM",
+        family: "24Cxx",
+        label: "24C128",
+        description:
+            "I²C EEPROM."
+    }
+];
+
+
+function openHome(){
+    workspaceMode = null;
+    vehicleContext = null;
+    hardwareContext = null;
+
+    show("select");
 }
 
+
+function openVehicleWorkspace(){
+    updateSelectedVehicle();
+
+    if(!selectedVehicle){
+        return;
+    }
+
+    rememberSelectedVehicle();
+
+    vehicleContext =
+        selectedVehicle;
+
+    hardwareContext =
+        null;
+
+    const makeSelect =
+        document.getElementById(
+            "vehicleMake"
+        );
+
+    const makeLabel =
+        makeSelect.options[
+            makeSelect.selectedIndex
+        ]
+            ? makeSelect.options[
+                makeSelect.selectedIndex
+            ].textContent
+            : "VEHICLE";
+
+    document.getElementById(
+        "vehicleWorkspaceMake"
+    ).textContent =
+        makeLabel.toUpperCase();
+
+    document.getElementById(
+        "vehicleWorkspaceName"
+    ).textContent =
+        selectedVehicle.label;
+
+    document.getElementById(
+        "vehicleAdvancedContextPreview"
+    ).textContent =
+        "Active profile: " +
+        selectedVehicle.fileLabel;
+
+    show("vehicleWorkspace");
+}
+
+
+function startVehicleAutomaticHardware(){
+    if(!vehicleContext){
+        return;
+    }
+
+    selectedVehicle =
+        vehicleContext;
+
+    workspaceMode =
+        "VEHICLE_AUTOMATIC";
+
+    openConnectionGuide();
+}
+
+
+function startVehicleAutomaticFile(){
+    if(!vehicleContext){
+        return;
+    }
+
+    selectedVehicle =
+        vehicleContext;
+
+    workspaceMode =
+        "VEHICLE_AUTOMATIC";
+
+    openFileConversion();
+}
+
+
+function openVehicleAdvancedTools(){
+    if(!vehicleContext){
+        return;
+    }
+
+    selectedVehicle =
+        vehicleContext;
+
+    workspaceMode =
+        "VEHICLE_ADVANCED";
+
+    hardwareContext = {
+        source: "VEHICLE_PROFILE",
+        processor:
+            vehicleContext.processor ||
+            null
+    };
+
+    advancedToolsReturnScreen =
+        "vehicleWorkspace";
+
+    updateAdvancedContextBanner();
+
+    /*
+    Vehicle Advanced keeps the normal Advanced Tools
+    landing screen. Once memory is opened/read, the
+    Hex Workspace automatically gains Convert Cluster.
+    */
+    show("advanced");
+}
+
+
+function openGenericAdvancedSelector(){
+    workspaceMode =
+        "GENERIC_ADVANCED";
+
+    vehicleContext = null;
+    hardwareContext = null;
+
+    const search =
+        document.getElementById(
+            "processorSearch"
+        );
+
+    if(search){
+        search.value = "";
+    }
+
+    renderProcessorCatalog();
+
+    show("genericAdvancedSelector");
+}
+
+
+function selectProcessor(processorKey){
+    const processor =
+        PROCESSOR_CATALOG.find(
+            item =>
+                item.key ===
+                processorKey
+        );
+
+    if(!processor){
+        return;
+    }
+
+    hardwareContext = {
+        source: "MANUAL_SELECTION",
+        ...processor
+    };
+
+    const summary =
+        document.getElementById(
+            "processorSelectionSummary"
+        );
+
+    summary.innerHTML =
+        "<small>SELECTED</small>" +
+        "<strong>" +
+        processor.label +
+        "</strong>" +
+        "<span>" +
+        processor.category +
+        " · " +
+        processor.family +
+        "</span>";
+
+    const button =
+        document.getElementById(
+            "openGenericAdvancedButton"
+        );
+
+    button.disabled = false;
+
+    renderProcessorCatalog();
+}
+
+
+function renderProcessorCatalog(){
+    const grid =
+        document.getElementById(
+            "processorGrid"
+        );
+
+    if(!grid){
+        return;
+    }
+
+    const search =
+        document.getElementById(
+            "processorSearch"
+        );
+
+    const query =
+        (
+            search
+                ? search.value
+                : ""
+        )
+            .trim()
+            .toLowerCase();
+
+    grid.innerHTML = "";
+
+    const matches =
+        PROCESSOR_CATALOG.filter(
+            processor => {
+                const haystack = [
+                    processor.label,
+                    processor.category,
+                    processor.family,
+                    processor.description
+                ]
+                    .join(" ")
+                    .toLowerCase();
+
+                return !query ||
+                    haystack.includes(query);
+            }
+        );
+
+
+    if(!matches.length){
+        const empty =
+            document.createElement(
+                "div"
+            );
+
+        empty.className =
+            "processor-empty";
+
+        empty.textContent =
+            "No processor or memory chip found.";
+
+        grid.appendChild(empty);
+
+        return;
+    }
+
+
+    for(const processor of matches){
+        const button =
+            document.createElement(
+                "button"
+            );
+
+        button.type = "button";
+
+        button.className =
+            "processor-card";
+
+        if(
+            hardwareContext &&
+            hardwareContext.key ===
+                processor.key
+        ){
+            button.classList.add(
+                "active"
+            );
+        }
+
+        button.innerHTML =
+            "<small>" +
+            processor.category +
+            "</small>" +
+            "<strong>" +
+            processor.label +
+            "</strong>" +
+            "<span>" +
+            processor.family +
+            "</span>" +
+            "<p>" +
+            processor.description +
+            "</p>";
+
+        button.addEventListener(
+            "click",
+            () => {
+                selectProcessor(
+                    processor.key
+                );
+            }
+        );
+
+        grid.appendChild(
+            button
+        );
+    }
+}
+
+
+function openSelectedGenericAdvancedTools(){
+    if(!hardwareContext){
+        return;
+    }
+
+    workspaceMode =
+        "GENERIC_ADVANCED";
+
+    vehicleContext = null;
+
+    advancedToolsReturnScreen =
+        "genericAdvancedSelector";
+
+    updateAdvancedContextBanner();
+
+    show("advanced");
+}
+
+
+function updateAdvancedContextBanner(){
+    const mode =
+        document.getElementById(
+            "advancedContextMode"
+        );
+
+    const title =
+        document.getElementById(
+            "advancedContextTitle"
+        );
+
+    const detail =
+        document.getElementById(
+            "advancedContextDetail"
+        );
+
+    if(
+        !mode ||
+        !title ||
+        !detail
+    ){
+        return;
+    }
+
+
+    if(
+        workspaceMode ===
+        "VEHICLE_ADVANCED" &&
+        vehicleContext
+    ){
+        mode.textContent =
+            "VEHICLE ADVANCED";
+
+        title.textContent =
+            vehicleContext.fileLabel;
+
+        const processor =
+            vehicleContext.processor ||
+            (
+                hardwareContext &&
+                hardwareContext.processor
+            );
+
+        detail.textContent =
+            processor
+                ? "Vehicle profile active · " +
+                  processor
+                : "Vehicle profile active";
+
+        return;
+    }
+
+
+    mode.textContent =
+        "GENERIC ADVANCED";
+
+    title.textContent =
+        hardwareContext
+            ? hardwareContext.label ||
+              hardwareContext.processor ||
+              "Manual Hardware"
+            : "Generic Advanced Workspace";
+
+    detail.textContent =
+        hardwareContext
+            ? (
+                hardwareContext.category
+                    ? hardwareContext.category +
+                      " · " +
+                      hardwareContext.family
+                    : "Manual hardware context"
+            )
+            : "No vehicle profile active.";
+}
+
+
+/*
+Legacy-safe entry point.
+
+Any old call to openAdvancedTools() now opens
+GENERIC mode rather than silently inheriting
+the selected vehicle.
+*/
+function openAdvancedTools(returnScreen){
+    workspaceMode =
+        "GENERIC_ADVANCED";
+
+    vehicleContext = null;
+
+    advancedToolsReturnScreen =
+        returnScreen || "select";
+
+    updateAdvancedContextBanner();
+
+    show("advanced");
+}
 
 
 function closeAdvancedTools(){
     show(
-        advancedToolsReturnScreen || 'select'
+        advancedToolsReturnScreen ||
+        "select"
     );
 }
 
 
 let currentMemoryBytes = [];
+let originalMemoryBytes = [];
+
 let currentMemoryAnnotations = new Set();
+let modifiedMemoryOffsets = new Set();
+
+let currentMemorySource = null;
+let currentMemoryFilename = null;
+let currentMemorySha256 = null;
+let currentMemoryType = null;
+
+let advancedConversionSource = null;
+let advancedConversionTarget = null;
+
+
+
+function bytesToHex(bytes){
+    return Array.from(bytes)
+        .map(
+            byte =>
+                byte
+                    .toString(16)
+                    .padStart(2, "0")
+        )
+        .join("");
+}
+
+
+async function sha256Bytes(bytes){
+    const input =
+        bytes instanceof Uint8Array
+            ? bytes
+            : new Uint8Array(bytes);
+
+    const digest =
+        await crypto.subtle.digest(
+            "SHA-256",
+            input
+        );
+
+    return Array.from(
+        new Uint8Array(digest)
+    )
+        .map(
+            byte =>
+                byte
+                    .toString(16)
+                    .padStart(2, "0")
+        )
+        .join("");
+}
+
+
+function inferMemoryTypeFromFilename(filename){
+    const lower =
+        filename.toLowerCase();
+
+    if(lower.endsWith(".eep")){
+        return "EEPROM";
+    }
+
+    if(
+        lower.endsWith(".bin") ||
+        lower.endsWith(".rom") ||
+        lower.endsWith(".dump") ||
+        lower.endsWith(".dat")
+    ){
+        return "MEMORY IMAGE";
+    }
+
+    return "MEMORY";
+}
+
+
+function populateMemoryWorkspace({
+    bytes,
+    source,
+    filename,
+    sha256,
+    memoryType,
+    vehicle,
+    clusterId,
+    cable,
+    voltage,
+    current,
+    annotations = []
+}){
+    currentMemoryBytes =
+        Array.from(bytes);
+
+    originalMemoryBytes =
+        Array.from(bytes);
+
+    modifiedMemoryOffsets =
+        new Set();
+
+    currentMemoryAnnotations =
+        new Set(
+            annotations.map(
+                item => Number(item.offset)
+            )
+        );
+
+    currentMemorySource =
+        source;
+
+    currentMemoryFilename =
+        filename;
+
+    currentMemorySha256 =
+        sha256;
+
+    currentMemoryType =
+        memoryType;
+
+    document.getElementById(
+        "memoryTypeBadge"
+    ).textContent =
+        memoryType;
+
+    document.getElementById(
+        "memorySizeBadge"
+    ).textContent =
+        currentMemoryBytes.length +
+        " BYTES";
+
+    document.getElementById(
+        "memoryVehicle"
+    ).textContent =
+        vehicle || "USER FILE";
+
+    document.getElementById(
+        "memoryClusterId"
+    ).textContent =
+        clusterId || "NOT AVAILABLE";
+
+    document.getElementById(
+        "memoryCable"
+    ).textContent =
+        cable || "FILE MODE";
+
+    document.getElementById(
+        "memoryVoltage"
+    ).textContent =
+        voltage == null
+            ? "N/A · FILE MODE"
+            : Number(voltage).toFixed(1) +
+              " V";
+
+    document.getElementById(
+        "memoryCurrent"
+    ).textContent =
+        current == null
+            ? "N/A · FILE MODE"
+            : Number(current).toFixed(2) +
+              " A · MONITORING";
+
+    document.getElementById(
+        "memoryType"
+    ).textContent =
+        memoryType;
+
+    document.getElementById(
+        "memorySize"
+    ).textContent =
+        currentMemoryBytes.length +
+        " bytes";
+
+    document.getElementById(
+        "memorySha"
+    ).textContent =
+        sha256;
+
+    const modeBadge =
+        document.getElementById(
+            "memoryModeBadge"
+        );
+
+    if(modeBadge){
+        modeBadge.textContent =
+            source === "FILE"
+                ? "EDITABLE FILE"
+                : "EDITABLE COPY";
+    }
+
+    updateMemoryModifiedState();
+    renderHexViewer();
+    configureAdvancedVehicleConversion();
+}
+
+
+async function openAdvancedMemoryFile(file){
+    if(!file){
+        return;
+    }
+
+    show("memory");
+
+    const loading =
+        document.getElementById(
+            "memoryLoading"
+        );
+
+    const content =
+        document.getElementById(
+            "memoryContent"
+        );
+
+    const errorBox =
+        document.getElementById(
+            "memoryError"
+        );
+
+    loading.style.display = "";
+    content.style.display = "none";
+
+    errorBox.classList.remove(
+        "visible"
+    );
+
+    errorBox.textContent = "";
+
+    try{
+        const buffer =
+            await file.arrayBuffer();
+
+        const bytes =
+            new Uint8Array(buffer);
+
+        if(!bytes.length){
+            throw new Error(
+                "Selected file is empty."
+            );
+        }
+
+        const digest =
+            await sha256Bytes(bytes);
+
+        populateMemoryWorkspace({
+            bytes,
+            source: "FILE",
+            filename: file.name,
+            sha256: digest,
+            memoryType:
+                inferMemoryTypeFromFilename(
+                    file.name
+                ),
+            vehicle:
+                (
+                    workspaceMode ===
+                        "VEHICLE_ADVANCED" &&
+                    vehicleContext
+                )
+                    ? vehicleContext.fileLabel
+                    : "GENERIC / USER FILE",
+            clusterId:
+                "NOT AVAILABLE · FILE MODE",
+            cable:
+                "FILE MODE",
+            voltage: null,
+            current: null,
+            annotations: []
+        });
+
+        loading.style.display =
+            "none";
+
+        content.style.display =
+            "";
+
+    }catch(error){
+        loading.style.display =
+            "none";
+
+        content.style.display =
+            "none";
+
+        errorBox.textContent =
+            error.message;
+
+        errorBox.classList.add(
+            "visible"
+        );
+    }
+}
+
+
+function saveActiveMemoryFile(){
+    if(!currentMemoryBytes.length){
+        alert(
+            "No memory data is currently loaded."
+        );
+        return;
+    }
+
+    const bytes =
+        new Uint8Array(
+            currentMemoryBytes
+        );
+
+    const blob =
+        new Blob(
+            [bytes],
+            {
+                type:
+                    "application/octet-stream"
+            }
+        );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const link =
+        document.createElement("a");
+
+    let filename =
+        currentMemoryFilename;
+
+    if(!filename){
+        const vehicleKey =
+            selectedVehicle
+                ? selectedVehicle.key
+                : "memory";
+
+        filename =
+            vehicleKey +
+            "_memory.bin";
+    }
+
+    link.href = url;
+    link.download = filename;
+
+    document.body.appendChild(
+        link
+    );
+
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+}
+
+
+document.addEventListener(
+    "click",
+    event => {
+        const openTool =
+            event.target.closest(
+                '[data-tool="open-memory-file"]'
+            );
+
+        if(openTool){
+            document.getElementById(
+                "advancedMemoryFileInput"
+            ).click();
+
+            return;
+        }
+
+
+    }
+);
+
+
+document.addEventListener(
+    "change",
+    event => {
+        if(
+            event.target.id !==
+            "advancedMemoryFileInput"
+        ){
+            return;
+        }
+
+        const file =
+            event.target.files &&
+            event.target.files[0];
+
+        if(file){
+            openAdvancedMemoryFile(
+                file
+            );
+        }
+
+        event.target.value = "";
+    }
+);
 
 
 async function readMemory(){
@@ -3795,74 +6307,55 @@ async function readMemory(){
             );
         }
 
-        currentMemoryBytes = [];
+        const bytes = [];
 
-        for(let i = 0; i < data.data_hex.length; i += 2){
-            currentMemoryBytes.push(
+        for(
+            let i = 0;
+            i < data.data_hex.length;
+            i += 2
+        ){
+            bytes.push(
                 parseInt(
-                    data.data_hex.slice(i, i + 2),
+                    data.data_hex.slice(
+                        i,
+                        i + 2
+                    ),
                     16
                 )
             );
         }
 
-        if(currentMemoryBytes.length !== data.memory_size){
+        if(
+            bytes.length !==
+            data.memory_size
+        ){
             throw new Error(
                 'Memory size does not match received data.'
             );
         }
 
-        currentMemoryAnnotations = new Set(
-            (data.annotations || []).map(
-                item => Number(item.offset)
-            )
-        );
-
-        document.getElementById(
-            'memoryTypeBadge'
-        ).textContent = data.memory_type;
-
-        document.getElementById(
-            'memorySizeBadge'
-        ).textContent = data.memory_size + ' BYTES';
-
-        document.getElementById(
-            'memoryVehicle'
-        ).textContent = data.vehicle;
-
-        document.getElementById(
-            'memoryClusterId'
-        ).textContent = data.cluster_id;
-
-        document.getElementById(
-            'memoryCable'
-        ).textContent = data.cable;
-
-        document.getElementById(
-            'memoryVoltage'
-        ).textContent =
-            Number(data.voltage).toFixed(1) + ' V';
-
-        document.getElementById(
-            'memoryCurrent'
-        ).textContent =
-            Number(data.current).toFixed(2) +
-            ' A · MONITORING';
-
-        document.getElementById(
-            'memoryType'
-        ).textContent = data.memory_type;
-
-        document.getElementById(
-            'memorySize'
-        ).textContent =
-            data.memory_size + ' bytes';
-
-        document.getElementById(
-            'memorySha'
-        ).textContent = data.sha256;
-
-        renderHexViewer();
+        populateMemoryWorkspace({
+            bytes,
+            source: "HARDWARE",
+            filename:
+                "read_memory.bin",
+            sha256:
+                data.sha256,
+            memoryType:
+                data.memory_type,
+            vehicle:
+                data.vehicle,
+            clusterId:
+                data.cluster_id,
+            cable:
+                data.cable,
+            voltage:
+                data.voltage,
+            current:
+                data.current,
+            annotations:
+                data.annotations || []
+        });
 
         loading.style.display = 'none';
         content.style.display = '';
@@ -3877,89 +6370,866 @@ async function readMemory(){
 }
 
 
-function renderHexViewer(){
-    const head = document.getElementById('hexHead');
-    const body = document.getElementById('hexBody');
 
-    let header = '<tr><th>OFFSET</th>';
+function configureAdvancedVehicleConversion(){
+    const panel =
+        document.getElementById(
+            "vehicleMemoryConversion"
+        );
 
-    for(let i = 0; i < 16; i++){
-        header +=
-            '<th>' +
-            i.toString(16)
-                .toUpperCase()
-                .padStart(2,'0') +
-            '</th>';
+    if(!panel){
+        return;
     }
 
-    header += '<th>ASCII</th></tr>';
-    head.innerHTML = header;
 
-    let rows = '';
-
-    for(
-        let offset = 0;
-        offset < currentMemoryBytes.length;
-        offset += 16
+    if(
+        workspaceMode !==
+            "VEHICLE_ADVANCED" ||
+        !vehicleContext ||
+        !vehicleContext.conversionType
     ){
-        rows += '<tr>';
+        panel.style.display =
+            "none";
 
-        rows +=
-            '<td class="offset">' +
-            offset.toString(16)
-                .toUpperCase()
-                .padStart(8,'0') +
-            '</td>';
+        return;
+    }
 
-        let ascii = '';
 
-        for(let column = 0; column < 16; column++){
-            const index = offset + column;
+    panel.style.display =
+        "";
 
-            if(index < currentMemoryBytes.length){
-                const value = currentMemoryBytes[index];
 
-                const annotated =
-                    currentMemoryAnnotations.has(index)
-                        ? ' annotated'
-                        : '';
+    document.getElementById(
+        "vehicleMemoryConversionProfile"
+    ).textContent =
+        vehicleContext.fileLabel;
 
-                rows +=
-                    '<td class="byte' + annotated + '"' +
-                    ' id="memory-byte-' + index + '"' +
-                    ' title="Offset 0x' +
-                    index.toString(16).toUpperCase() +
-                    '">' +
-                    value.toString(16)
-                        .toUpperCase()
-                        .padStart(2,'0') +
-                    '</td>';
 
-                ascii +=
-                    value >= 32 && value <= 126
-                        ? String.fromCharCode(value)
-                        : '.';
+    const directionA =
+        document.getElementById(
+            "vehicleConversionDirectionA"
+        );
 
-            } else {
-                rows += '<td class="byte"></td>';
-                ascii += ' ';
+    const directionB =
+        document.getElementById(
+            "vehicleConversionDirectionB"
+        );
+
+
+    if(
+        vehicleContext.conversionType ===
+        "REGION"
+    ){
+        directionA.textContent =
+            "CANADA → USA";
+
+        directionB.textContent =
+            "USA → CANADA";
+
+        advancedConversionSource =
+            "CANADA";
+
+        advancedConversionTarget =
+            "USA";
+
+    }else{
+        directionA.textContent =
+            "KM → MILES";
+
+        directionB.textContent =
+            "MILES → KM";
+
+        advancedConversionSource =
+            "KM";
+
+        advancedConversionTarget =
+            "MI";
+    }
+
+
+    directionA.classList.add(
+        "active"
+    );
+
+    directionB.classList.remove(
+        "active"
+    );
+
+
+    const result =
+        document.getElementById(
+            "vehicleMemoryConversionResult"
+        );
+
+    result.style.display =
+        "none";
+
+    result.textContent =
+        "";
+}
+
+
+function setAdvancedConversionDirection(side){
+    if(
+        !vehicleContext ||
+        !vehicleContext.conversionType
+    ){
+        return;
+    }
+
+
+    const directionA =
+        document.getElementById(
+            "vehicleConversionDirectionA"
+        );
+
+    const directionB =
+        document.getElementById(
+            "vehicleConversionDirectionB"
+        );
+
+
+    directionA.classList.toggle(
+        "active",
+        side === "A"
+    );
+
+    directionB.classList.toggle(
+        "active",
+        side === "B"
+    );
+
+
+    if(
+        vehicleContext.conversionType ===
+        "REGION"
+    ){
+        if(side === "A"){
+            advancedConversionSource =
+                "CANADA";
+
+            advancedConversionTarget =
+                "USA";
+        }else{
+            advancedConversionSource =
+                "USA";
+
+            advancedConversionTarget =
+                "CANADA";
+        }
+
+    }else{
+        if(side === "A"){
+            advancedConversionSource =
+                "KM";
+
+            advancedConversionTarget =
+                "MI";
+        }else{
+            advancedConversionSource =
+                "MI";
+
+            advancedConversionTarget =
+                "KM";
+        }
+    }
+}
+
+
+function resolveAdvancedMemoryOrganization(){
+    if(
+        !vehicleContext ||
+        vehicleContext.conversionType !==
+            "UNIT"
+    ){
+        return "AUTO";
+    }
+
+
+    /*
+    Reuse detected organization whenever available.
+
+    Otherwise let the backend perform conservative
+    AUTO detection exactly like File Conversion.
+    */
+    return (
+        fileDetectedOrganization ||
+        "AUTO"
+    );
+}
+
+
+async function convertAdvancedCluster(){
+    if(
+        workspaceMode !==
+            "VEHICLE_ADVANCED" ||
+        !vehicleContext
+    ){
+        return;
+    }
+
+
+    if(!currentMemoryBytes.length){
+        alert(
+            "Load or read memory before converting the cluster."
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "advancedConvertClusterButton"
+        );
+
+    const result =
+        document.getElementById(
+            "vehicleMemoryConversionResult"
+        );
+
+
+    const originalButtonText =
+        button.textContent;
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "Converting...";
+
+    result.style.display =
+        "none";
+
+    result.className =
+        "vehicle-memory-conversion-result";
+
+
+    try{
+        const memoryOrganization =
+            resolveAdvancedMemoryOrganization();
+
+
+        const url =
+            "/api/file/convert" +
+            "?source_unit=" +
+            encodeURIComponent(
+                advancedConversionSource
+            ) +
+            "&target_unit=" +
+            encodeURIComponent(
+                advancedConversionTarget
+            ) +
+            "&memory_organization=" +
+            encodeURIComponent(
+                memoryOrganization
+            ) +
+            "&vehicle_key=" +
+            encodeURIComponent(
+                vehicleContext.key
+            );
+
+
+        const response =
+            await fetch(
+                url,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/octet-stream"
+                    },
+
+                    body:
+                        new Uint8Array(
+                            currentMemoryBytes
+                        )
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if(
+            !response.ok ||
+            !data.success
+        ){
+            throw new Error(
+                data.detail ||
+                "Cluster conversion failed."
+            );
+        }
+
+
+        if(!data.verified){
+            throw new Error(
+                "Converted memory verification failed."
+            );
+        }
+
+
+        const converted =
+            bytesFromHex(
+                data.data_hex
+            );
+
+
+        if(
+            converted.length !==
+            currentMemoryBytes.length
+        ){
+            throw new Error(
+                "Converted memory size changed."
+            );
+        }
+
+
+        currentMemoryBytes =
+            Array.from(
+                converted
+            );
+
+
+        modifiedMemoryOffsets =
+            new Set();
+
+
+        for(
+            let offset = 0;
+            offset <
+                currentMemoryBytes.length;
+            offset++
+        ){
+            if(
+                currentMemoryBytes[
+                    offset
+                ] !==
+                originalMemoryBytes[
+                    offset
+                ]
+            ){
+                modifiedMemoryOffsets.add(
+                    offset
+                );
             }
         }
 
-        const safeAscii = ascii
-            .replace(/&/g,'&amp;')
-            .replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;');
 
-        rows +=
-            '<td class="ascii">' +
-            safeAscii +
-            '</td>';
+        currentMemorySha256 =
+            await sha256Bytes(
+                new Uint8Array(
+                    currentMemoryBytes
+                )
+            );
 
-        rows += '</tr>';
+
+        document.getElementById(
+            "memorySha"
+        ).textContent =
+            currentMemorySha256;
+
+
+        updateMemoryModifiedState();
+
+        renderHexViewer();
+
+
+        result.className =
+            "vehicle-memory-conversion-result success";
+
+        result.innerHTML =
+            "<strong>CONVERSION COMPLETE ✓</strong>" +
+            "<span>" +
+            data.changed_byte_count +
+            " byte" +
+            (
+                data.changed_byte_count === 1
+                    ? ""
+                    : "s"
+            ) +
+            " changed · " +
+            data.source_unit +
+            " → " +
+            data.target_unit +
+            "</span>";
+
+        result.style.display =
+            "";
+
+
+    }catch(error){
+        result.className =
+            "vehicle-memory-conversion-result failure";
+
+        result.innerHTML =
+            "<strong>CONVERSION FAILED</strong>" +
+            "<span>" +
+            error.message +
+            "</span>";
+
+        result.style.display =
+            "";
+
+    }finally{
+        button.disabled =
+            false;
+
+        button.textContent =
+            originalButtonText;
+    }
+}
+
+
+function updateMemoryModifiedState(){
+    const count =
+        modifiedMemoryOffsets.size;
+
+    const label =
+        document.getElementById(
+            "memoryModifiedCount"
+        );
+
+    const revert =
+        document.getElementById(
+            "memoryRevertButton"
+        );
+
+    if(label){
+        label.textContent =
+            count +
+            (
+                count === 1
+                    ? " BYTE MODIFIED"
+                    : " BYTES MODIFIED"
+            );
+
+        label.classList.toggle(
+            "active",
+            count > 0
+        );
     }
 
-    body.innerHTML = rows;
+    if(revert){
+        revert.disabled =
+            count === 0;
+    }
+}
+
+
+function formatMemoryOffset(offset){
+    const width =
+        Math.max(
+            4,
+            Math.ceil(
+                Math.log2(
+                    Math.max(
+                        currentMemoryBytes.length,
+                        1
+                    )
+                ) / 4
+            )
+        );
+
+    return offset
+        .toString(16)
+        .toUpperCase()
+        .padStart(width, "0");
+}
+
+
+function renderHexViewer(){
+    const head =
+        document.getElementById(
+            "hexHead"
+        );
+
+    const body =
+        document.getElementById(
+            "hexBody"
+        );
+
+    head.innerHTML = "";
+    body.innerHTML = "";
+
+    const headerRow =
+        document.createElement(
+            "tr"
+        );
+
+    const offsetHeader =
+        document.createElement(
+            "th"
+        );
+
+    offsetHeader.textContent =
+        "OFFSET";
+
+    headerRow.appendChild(
+        offsetHeader
+    );
+
+    for(let column = 0; column < 16; column++){
+        const th =
+            document.createElement(
+                "th"
+            );
+
+        th.textContent =
+            column
+                .toString(16)
+                .toUpperCase()
+                .padStart(2, "0");
+
+        headerRow.appendChild(
+            th
+        );
+    }
+
+    const asciiHeader =
+        document.createElement(
+            "th"
+        );
+
+    asciiHeader.textContent =
+        "ASCII";
+
+    headerRow.appendChild(
+        asciiHeader
+    );
+
+    head.appendChild(
+        headerRow
+    );
+
+
+    for(
+        let rowOffset = 0;
+        rowOffset < currentMemoryBytes.length;
+        rowOffset += 16
+    ){
+        const row =
+            document.createElement(
+                "tr"
+            );
+
+        const offsetCell =
+            document.createElement(
+                "td"
+            );
+
+        offsetCell.className =
+            "hex-offset";
+
+        offsetCell.textContent =
+            formatMemoryOffset(
+                rowOffset
+            );
+
+        row.appendChild(
+            offsetCell
+        );
+
+        let ascii = "";
+
+        for(
+            let column = 0;
+            column < 16;
+            column++
+        ){
+            const offset =
+                rowOffset + column;
+
+            const cell =
+                document.createElement(
+                    "td"
+                );
+
+            if(
+                offset >=
+                currentMemoryBytes.length
+            ){
+                cell.className =
+                    "hex-empty";
+
+                cell.textContent = "";
+
+                row.appendChild(
+                    cell
+                );
+
+                ascii += " ";
+
+                continue;
+            }
+
+            const value =
+                currentMemoryBytes[
+                    offset
+                ];
+
+            cell.className =
+                "hex-byte";
+
+            cell.dataset.offset =
+                String(offset);
+
+            cell.id =
+                "memory-byte-" +
+                offset;
+
+            cell.textContent =
+                value
+                    .toString(16)
+                    .toUpperCase()
+                    .padStart(2, "0");
+
+            if(
+                currentMemoryAnnotations
+                    .has(offset)
+            ){
+                cell.classList.add(
+                    "annotated"
+                );
+            }
+
+            if(
+                modifiedMemoryOffsets
+                    .has(offset)
+            ){
+                cell.classList.add(
+                    "modified"
+                );
+            }
+
+            cell.addEventListener(
+                "dblclick",
+                () => {
+                    beginHexByteEdit(
+                        cell,
+                        offset
+                    );
+                }
+            );
+
+            row.appendChild(
+                cell
+            );
+
+            ascii +=
+                (
+                    value >= 32 &&
+                    value <= 126
+                )
+                    ? String.fromCharCode(
+                        value
+                    )
+                    : ".";
+        }
+
+        const asciiCell =
+            document.createElement(
+                "td"
+            );
+
+        asciiCell.className =
+            "hex-ascii";
+
+        asciiCell.textContent =
+            ascii;
+
+        row.appendChild(
+            asciiCell
+        );
+
+        body.appendChild(
+            row
+        );
+    }
+}
+
+
+function beginHexByteEdit(
+    cell,
+    offset
+){
+    if(
+        cell.querySelector(
+            "input"
+        )
+    ){
+        return;
+    }
+
+    const oldValue =
+        currentMemoryBytes[
+            offset
+        ];
+
+    const input =
+        document.createElement(
+            "input"
+        );
+
+    input.className =
+        "hex-byte-editor";
+
+    input.maxLength = 2;
+
+    input.value =
+        oldValue
+            .toString(16)
+            .toUpperCase()
+            .padStart(2, "0");
+
+    cell.textContent = "";
+    cell.appendChild(
+        input
+    );
+
+    input.focus();
+    input.select();
+
+
+    const cancel = () => {
+        renderHexViewer();
+    };
+
+
+    const commit = async () => {
+        const value =
+            input.value
+                .trim()
+                .toUpperCase();
+
+        if(
+            !/^[0-9A-F]{2}$/.test(
+                value
+            )
+        ){
+            input.classList.add(
+                "invalid"
+            );
+
+            input.focus();
+            input.select();
+
+            return;
+        }
+
+        currentMemoryBytes[
+            offset
+        ] =
+            parseInt(
+                value,
+                16
+            );
+
+        if(
+            currentMemoryBytes[
+                offset
+            ] ===
+            originalMemoryBytes[
+                offset
+            ]
+        ){
+            modifiedMemoryOffsets
+                .delete(
+                    offset
+                );
+        }else{
+            modifiedMemoryOffsets
+                .add(
+                    offset
+                );
+        }
+
+        currentMemorySha256 =
+            await sha256Bytes(
+                new Uint8Array(
+                    currentMemoryBytes
+                )
+            );
+
+        document.getElementById(
+            "memorySha"
+        ).textContent =
+            currentMemorySha256;
+
+        updateMemoryModifiedState();
+        renderHexViewer();
+
+        const updatedCell =
+            document.getElementById(
+                "memory-byte-" +
+                offset
+            );
+
+        if(updatedCell){
+            updatedCell.scrollIntoView({
+                block: "nearest",
+                inline: "nearest"
+            });
+        }
+    };
+
+
+    input.addEventListener(
+        "keydown",
+        event => {
+            if(event.key === "Enter"){
+                event.preventDefault();
+                commit();
+            }
+
+            if(event.key === "Escape"){
+                event.preventDefault();
+                cancel();
+            }
+        }
+    );
+
+    input.addEventListener(
+        "blur",
+        () => {
+            commit();
+        },
+        {once:true}
+    );
+}
+
+
+async function revertMemoryChanges(){
+    if(
+        !modifiedMemoryOffsets.size
+    ){
+        return;
+    }
+
+    currentMemoryBytes =
+        Array.from(
+            originalMemoryBytes
+        );
+
+    modifiedMemoryOffsets =
+        new Set();
+
+    currentMemorySha256 =
+        await sha256Bytes(
+            new Uint8Array(
+                currentMemoryBytes
+            )
+        );
+
+    document.getElementById(
+        "memorySha"
+    ).textContent =
+        currentMemorySha256;
+
+    updateMemoryModifiedState();
+    renderHexViewer();
 }
 
 
@@ -4550,93 +7820,1654 @@ document.addEventListener('click', event => {
 
 
 
-const VEHICLE_CATALOG = {
-    jeep: [
-        {
-            key: "jeep_wrangler_2012_2018",
-            label: "Wrangler 2012–2018",
-            fileLabel: "Jeep Wrangler 2012–2018",
-            conversionType: "UNIT",
-            source: "KM",
-            target: "MI"
-        }
-    ],
 
-    toyota: [
-        {
-            key: "toyota_tundra_gas",
-            label: "Tundra Gas",
-            fileLabel: "Toyota Tundra Gas",
-            conversionType: "REGION",
-            modelKey: "tundra_gas"
-        },
-        {
-            key: "toyota_tundra_hybrid",
-            label: "Tundra Hybrid",
-            fileLabel: "Toyota Tundra Hybrid",
-            conversionType: "REGION",
-            modelKey: "tundra_hybrid"
-        },
-        {
-            key: "toyota_venza_hybrid",
-            label: "Venza Hybrid",
-            fileLabel: "Toyota Venza Hybrid",
-            conversionType: "REGION",
-            modelKey: "venza_hybrid"
-        },
-        {
-            key: "toyota_highlander_limited",
-            label: "Highlander Limited",
-            fileLabel: "Toyota Highlander Limited",
-            conversionType: "REGION",
-            modelKey: "highlander_limited"
-        },
-        {
-            key: "toyota_grand_highlander",
-            label: "Grand Highlander",
-            fileLabel: "Toyota Grand Highlander",
-            conversionType: "REGION",
-            modelKey: "grand_highlander"
-        },
-        {
-            key: "toyota_sequoia_hybrid",
-            label: "Sequoia Hybrid",
-            fileLabel: "Toyota Sequoia Hybrid",
-            conversionType: "REGION",
-            modelKey: "sequoia_hybrid"
-        },
-        {
-            key: "toyota_corolla",
-            label: "Corolla",
-            fileLabel: "Toyota Corolla",
-            conversionType: "REGION",
-            modelKey: "corolla"
-        },
-        {
-            key: "toyota_sienna",
-            label: "Sienna",
-            fileLabel: "Toyota Sienna",
-            conversionType: "REGION",
-            modelKey: "sienna"
-        },
-        {
-            key: "toyota_crown_signia",
-            label: "Crown Signia",
-            fileLabel: "Toyota Crown Signia",
-            conversionType: "REGION",
-            modelKey: "crown_signia"
-        },
-        {
-            key: "toyota_rav4",
-            label: "RAV4",
-            fileLabel: "Toyota RAV4",
-            conversionType: "REGION",
-            modelKey: "rav4"
-        }
-    ]
-};
 
-let selectedVehicle = VEHICLE_CATALOG.jeep[0];
+let simulatedProgrammedMemoryBytes = [];
+let simulatedProgrammedMemorySha256 = null;
+let simulatedProgrammedMemoryTimestamp = null;
+let simulatedProgrammedFilename = null;
+
+
+function sleepMilliseconds(ms){
+    return new Promise(
+        resolve => setTimeout(resolve, ms)
+    );
+}
+
+
+async function openWriteMemory(){
+    show("writeMemory");
+
+    const empty =
+        document.getElementById(
+            "writeMemoryEmpty"
+        );
+
+    const controls =
+        document.getElementById(
+            "writeMemoryControls"
+        );
+
+    const result =
+        document.getElementById(
+            "writeMemoryResult"
+        );
+
+    result.style.display =
+        "none";
+
+    document.getElementById(
+        "writeMemoryProgressBar"
+    ).style.width =
+        "0%";
+
+    document.getElementById(
+        "writeMemoryProgressText"
+    ).textContent =
+        "READY";
+
+    document.getElementById(
+        "writeMemoryProgressPercent"
+    ).textContent =
+        "0%";
+
+
+    if(!currentMemoryBytes.length){
+        empty.style.display =
+            "";
+
+        controls.style.display =
+            "none";
+
+        document.getElementById(
+            "writeMemorySource"
+        ).textContent =
+            "---";
+
+        document.getElementById(
+            "writeMemoryFilename"
+        ).textContent =
+            "---";
+
+        document.getElementById(
+            "writeMemorySize"
+        ).textContent =
+            "---";
+
+        document.getElementById(
+            "writeMemorySha"
+        ).textContent =
+            "---";
+
+        return;
+    }
+
+
+    empty.style.display =
+        "none";
+
+    controls.style.display =
+        "";
+
+
+    document.getElementById(
+        "writeMemorySource"
+    ).textContent =
+        currentMemorySource ||
+        "MEMORY WORKSPACE";
+
+    document.getElementById(
+        "writeMemoryFilename"
+    ).textContent =
+        currentMemoryFilename ||
+        "memory.bin";
+
+    document.getElementById(
+        "writeMemorySize"
+    ).textContent =
+        currentMemoryBytes.length +
+        " bytes";
+
+
+    currentMemorySha256 =
+        await sha256Bytes(
+            new Uint8Array(
+                currentMemoryBytes
+            )
+        );
+
+    document.getElementById(
+        "writeMemorySha"
+    ).textContent =
+        currentMemorySha256;
+}
+
+
+async function startSimulatedMemoryWrite(){
+    if(!currentMemoryBytes.length){
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "writeMemoryStartButton"
+        );
+
+    const bar =
+        document.getElementById(
+            "writeMemoryProgressBar"
+        );
+
+    const text =
+        document.getElementById(
+            "writeMemoryProgressText"
+        );
+
+    const percent =
+        document.getElementById(
+            "writeMemoryProgressPercent"
+        );
+
+    const result =
+        document.getElementById(
+            "writeMemoryResult"
+        );
+
+
+    button.disabled = true;
+
+    result.style.display =
+        "none";
+
+
+    const stages = [
+        [5, "INITIALIZING"],
+        [15, "VALIDATING IMAGE"],
+        [30, "ERASING MEMORY"],
+        [45, "PROGRAMMING"],
+        [60, "PROGRAMMING"],
+        [75, "PROGRAMMING"],
+        [90, "FINALIZING"],
+        [100, "WRITE COMPLETE"]
+    ];
+
+
+    for(const [value, label] of stages){
+        bar.style.width =
+            value + "%";
+
+        percent.textContent =
+            value + "%";
+
+        text.textContent =
+            label;
+
+        await sleepMilliseconds(
+            value === 100
+                ? 250
+                : 180
+        );
+    }
+
+
+    simulatedProgrammedMemoryBytes =
+        Array.from(
+            currentMemoryBytes
+        );
+
+    simulatedProgrammedMemorySha256 =
+        await sha256Bytes(
+            new Uint8Array(
+                simulatedProgrammedMemoryBytes
+            )
+        );
+
+    simulatedProgrammedMemoryTimestamp =
+        new Date();
+
+    simulatedProgrammedFilename =
+        currentMemoryFilename ||
+        "memory.bin";
+
+
+    result.className =
+        "memory-operation-result success";
+
+    result.innerHTML =
+        "<strong>SIMULATED WRITE COMPLETE ✓</strong>" +
+        "<span>" +
+        simulatedProgrammedMemoryBytes.length +
+        " bytes programmed and retained for verification." +
+        "</span>";
+
+    result.style.display =
+        "";
+
+    button.disabled = false;
+}
+
+
+async function openVerifyMemory(){
+    show("verifyMemory");
+
+    const empty =
+        document.getElementById(
+            "verifyMemoryEmpty"
+        );
+
+    const controls =
+        document.getElementById(
+            "verifyMemoryControls"
+        );
+
+    const result =
+        document.getElementById(
+            "verifyMemoryResult"
+        );
+
+    const differences =
+        document.getElementById(
+            "verifyMemoryDifferences"
+        );
+
+
+    result.style.display =
+        "none";
+
+    differences.style.display =
+        "none";
+
+
+    if(
+        !simulatedProgrammedMemoryBytes.length
+    ){
+        empty.style.display =
+            "";
+
+        controls.style.display =
+            "none";
+
+        document.getElementById(
+            "verifyExpectedSize"
+        ).textContent =
+            currentMemoryBytes.length
+                ? currentMemoryBytes.length +
+                  " bytes"
+                : "---";
+
+        document.getElementById(
+            "verifyReadbackSize"
+        ).textContent =
+            "---";
+
+        document.getElementById(
+            "verifyExpectedSha"
+        ).textContent =
+            currentMemoryBytes.length
+                ? await sha256Bytes(
+                    new Uint8Array(
+                        currentMemoryBytes
+                    )
+                )
+                : "---";
+
+        document.getElementById(
+            "verifyReadbackSha"
+        ).textContent =
+            "---";
+
+        return;
+    }
+
+
+    empty.style.display =
+        "none";
+
+    controls.style.display =
+        "";
+
+
+    const expectedSha =
+        currentMemoryBytes.length
+            ? await sha256Bytes(
+                new Uint8Array(
+                    currentMemoryBytes
+                )
+            )
+            : "---";
+
+
+    document.getElementById(
+        "verifyExpectedSize"
+    ).textContent =
+        currentMemoryBytes.length +
+        " bytes";
+
+    document.getElementById(
+        "verifyReadbackSize"
+    ).textContent =
+        simulatedProgrammedMemoryBytes.length +
+        " bytes";
+
+    document.getElementById(
+        "verifyExpectedSha"
+    ).textContent =
+        expectedSha;
+
+    document.getElementById(
+        "verifyReadbackSha"
+    ).textContent =
+        simulatedProgrammedMemorySha256;
+}
+
+
+async function verifySimulatedMemory(){
+    if(
+        !simulatedProgrammedMemoryBytes.length
+    ){
+        return;
+    }
+
+
+    const expected =
+        currentMemoryBytes;
+
+    const readback =
+        simulatedProgrammedMemoryBytes;
+
+    const maxLength =
+        Math.max(
+            expected.length,
+            readback.length
+        );
+
+    const differences = [];
+
+
+    for(
+        let offset = 0;
+        offset < maxLength;
+        offset++
+    ){
+        const expectedValue =
+            offset < expected.length
+                ? expected[offset]
+                : null;
+
+        const readbackValue =
+            offset < readback.length
+                ? readback[offset]
+                : null;
+
+
+        if(
+            expectedValue !==
+            readbackValue
+        ){
+            differences.push({
+                offset,
+                expected:
+                    expectedValue,
+                readback:
+                    readbackValue
+            });
+        }
+    }
+
+
+    const expectedSha =
+        await sha256Bytes(
+            new Uint8Array(
+                expected
+            )
+        );
+
+    const readbackSha =
+        await sha256Bytes(
+            new Uint8Array(
+                readback
+            )
+        );
+
+
+    document.getElementById(
+        "verifyExpectedSha"
+    ).textContent =
+        expectedSha;
+
+    document.getElementById(
+        "verifyReadbackSha"
+    ).textContent =
+        readbackSha;
+
+
+    const result =
+        document.getElementById(
+            "verifyMemoryResult"
+        );
+
+    const differencePanel =
+        document.getElementById(
+            "verifyMemoryDifferences"
+        );
+
+    const body =
+        document.getElementById(
+            "verifyDifferenceBody"
+        );
+
+
+    body.innerHTML = "";
+
+
+    if(!differences.length){
+        result.className =
+            "verify-result success";
+
+        result.innerHTML =
+            "<strong>MEMORY VERIFIED ✓</strong>" +
+            "<span>" +
+            expected.length +
+            " bytes match programmed read-back exactly." +
+            "</span>";
+
+        result.style.display =
+            "";
+
+        differencePanel.style.display =
+            "none";
+
+        return;
+    }
+
+
+    result.className =
+        "verify-result failure";
+
+    result.innerHTML =
+        "<strong>VERIFICATION FAILED</strong>" +
+        "<span>" +
+        differences.length +
+        " byte" +
+        (
+            differences.length === 1
+                ? ""
+                : "s"
+        ) +
+        " differ from programmed read-back." +
+        "</span>";
+
+    result.style.display =
+        "";
+
+
+    for(
+        const difference of
+        differences.slice(0, 50)
+    ){
+        const row =
+            document.createElement(
+                "tr"
+            );
+
+        const offset =
+            document.createElement(
+                "td"
+            );
+
+        const expectedCell =
+            document.createElement(
+                "td"
+            );
+
+        const readbackCell =
+            document.createElement(
+                "td"
+            );
+
+
+        offset.textContent =
+            "0x" +
+            formatMemoryOffset(
+                difference.offset
+            );
+
+        expectedCell.textContent =
+            difference.expected === null
+                ? "--"
+                : difference.expected
+                    .toString(16)
+                    .toUpperCase()
+                    .padStart(2, "0");
+
+        readbackCell.textContent =
+            difference.readback === null
+                ? "--"
+                : difference.readback
+                    .toString(16)
+                    .toUpperCase()
+                    .padStart(2, "0");
+
+
+        row.appendChild(offset);
+        row.appendChild(expectedCell);
+        row.appendChild(readbackCell);
+
+        body.appendChild(row);
+    }
+
+
+    differencePanel.style.display =
+        "";
+}
+
+
+document.addEventListener(
+    "click",
+    event => {
+        const writeTool =
+            event.target.closest(
+                '[data-tool="write-memory"]'
+            );
+
+        if(writeTool){
+            openWriteMemory();
+            return;
+        }
+
+
+        const verifyTool =
+            event.target.closest(
+                '[data-tool="verify-memory"]'
+            );
+
+        if(verifyTool){
+            openVerifyMemory();
+        }
+    }
+);
+
+
+let compareFileA = null;
+let compareFileB = null;
+
+
+function resetCompareFiles(){
+    compareFileA = null;
+    compareFileB = null;
+
+    document.getElementById(
+        "compareFileAName"
+    ).textContent =
+        "No file selected";
+
+    document.getElementById(
+        "compareFileASize"
+    ).textContent =
+        "---";
+
+    document.getElementById(
+        "compareFileASha"
+    ).textContent =
+        "---";
+
+    document.getElementById(
+        "compareFileBName"
+    ).textContent =
+        "No file selected";
+
+    document.getElementById(
+        "compareFileBSize"
+    ).textContent =
+        "---";
+
+    document.getElementById(
+        "compareFileBSha"
+    ).textContent =
+        "---";
+
+    document.getElementById(
+        "compareResultCard"
+    ).style.display =
+        "none";
+
+    document.getElementById(
+        "compareDiffBody"
+    ).innerHTML =
+        "";
+}
+
+
+function openCompareFiles(){
+    resetCompareFiles();
+    show("compareFiles");
+}
+
+
+function selectCompareFile(side){
+    const input =
+        document.getElementById(
+            side === "A"
+                ? "compareFileInputA"
+                : "compareFileInputB"
+        );
+
+    input.click();
+}
+
+
+async function loadCompareFile(
+    file,
+    side
+){
+    if(!file){
+        return;
+    }
+
+    const buffer =
+        await file.arrayBuffer();
+
+    const bytes =
+        new Uint8Array(buffer);
+
+    if(!bytes.length){
+        alert(
+            "Selected file is empty."
+        );
+        return;
+    }
+
+    const sha =
+        await sha256Bytes(bytes);
+
+    const data = {
+        name: file.name,
+        bytes: bytes,
+        size: bytes.length,
+        sha256: sha
+    };
+
+    if(side === "A"){
+        compareFileA = data;
+
+        document.getElementById(
+            "compareFileAName"
+        ).textContent =
+            file.name;
+
+        document.getElementById(
+            "compareFileASize"
+        ).textContent =
+            bytes.length +
+            " bytes";
+
+        document.getElementById(
+            "compareFileASha"
+        ).textContent =
+            sha;
+    }else{
+        compareFileB = data;
+
+        document.getElementById(
+            "compareFileBName"
+        ).textContent =
+            file.name;
+
+        document.getElementById(
+            "compareFileBSize"
+        ).textContent =
+            bytes.length +
+            " bytes";
+
+        document.getElementById(
+            "compareFileBSha"
+        ).textContent =
+            sha;
+    }
+
+    if(
+        compareFileA &&
+        compareFileB
+    ){
+        compareLoadedFiles();
+    }
+}
+
+
+
+function buildCompareHexHeader(head){
+    head.innerHTML = "";
+
+    const row =
+        document.createElement("tr");
+
+    const offset =
+        document.createElement("th");
+
+    offset.textContent =
+        "OFFSET";
+
+    row.appendChild(offset);
+
+    for(
+        let column = 0;
+        column < 16;
+        column++
+    ){
+        const th =
+            document.createElement("th");
+
+        th.textContent =
+            column
+                .toString(16)
+                .toUpperCase()
+                .padStart(2, "0");
+
+        row.appendChild(th);
+    }
+
+    const ascii =
+        document.createElement("th");
+
+    ascii.textContent =
+        "ASCII";
+
+    row.appendChild(ascii);
+
+    head.appendChild(row);
+}
+
+
+function renderCompareHexViews(
+    a,
+    b
+){
+    const headA =
+        document.getElementById(
+            "compareHexHeadA"
+        );
+
+    const headB =
+        document.getElementById(
+            "compareHexHeadB"
+        );
+
+    const bodyA =
+        document.getElementById(
+            "compareHexBodyA"
+        );
+
+    const bodyB =
+        document.getElementById(
+            "compareHexBodyB"
+        );
+
+    const nameA =
+        document.getElementById(
+            "compareHexAName"
+        );
+
+    const nameB =
+        document.getElementById(
+            "compareHexBName"
+        );
+
+
+    nameA.textContent =
+        compareFileA
+            ? compareFileA.name
+            : "";
+
+    nameB.textContent =
+        compareFileB
+            ? compareFileB.name
+            : "";
+
+
+    buildCompareHexHeader(
+        headA
+    );
+
+    buildCompareHexHeader(
+        headB
+    );
+
+    bodyA.innerHTML = "";
+    bodyB.innerHTML = "";
+
+
+    const maxLength =
+        Math.max(
+            a.length,
+            b.length
+        );
+
+
+    for(
+        let rowOffset = 0;
+        rowOffset < maxLength;
+        rowOffset += 16
+    ){
+        const rowA =
+            document.createElement(
+                "tr"
+            );
+
+        const rowB =
+            document.createElement(
+                "tr"
+            );
+
+
+        const offsetA =
+            document.createElement(
+                "td"
+            );
+
+        const offsetB =
+            document.createElement(
+                "td"
+            );
+
+        offsetA.className =
+            "hex-offset";
+
+        offsetB.className =
+            "hex-offset";
+
+        const formattedOffset =
+            formatMemoryOffset(
+                rowOffset
+            );
+
+        offsetA.textContent =
+            formattedOffset;
+
+        offsetB.textContent =
+            formattedOffset;
+
+        rowA.appendChild(
+            offsetA
+        );
+
+        rowB.appendChild(
+            offsetB
+        );
+
+
+        let asciiA = "";
+        let asciiB = "";
+
+
+        for(
+            let column = 0;
+            column < 16;
+            column++
+        ){
+            const offset =
+                rowOffset + column;
+
+            const valueA =
+                offset < a.length
+                    ? a[offset]
+                    : null;
+
+            const valueB =
+                offset < b.length
+                    ? b[offset]
+                    : null;
+
+
+            const cellA =
+                document.createElement(
+                    "td"
+                );
+
+            const cellB =
+                document.createElement(
+                    "td"
+                );
+
+
+            const different =
+                valueA !== valueB;
+
+
+            if(valueA === null){
+                cellA.className =
+                    "hex-empty";
+
+                cellA.textContent =
+                    "--";
+
+                asciiA += " ";
+            }else{
+                cellA.className =
+                    "hex-byte compare-byte";
+
+                cellA.textContent =
+                    valueA
+                        .toString(16)
+                        .toUpperCase()
+                        .padStart(2, "0");
+
+                asciiA +=
+                    (
+                        valueA >= 32 &&
+                        valueA <= 126
+                    )
+                        ? String.fromCharCode(
+                            valueA
+                        )
+                        : ".";
+            }
+
+
+            if(valueB === null){
+                cellB.className =
+                    "hex-empty";
+
+                cellB.textContent =
+                    "--";
+
+                asciiB += " ";
+            }else{
+                cellB.className =
+                    "hex-byte compare-byte";
+
+                cellB.textContent =
+                    valueB
+                        .toString(16)
+                        .toUpperCase()
+                        .padStart(2, "0");
+
+                asciiB +=
+                    (
+                        valueB >= 32 &&
+                        valueB <= 126
+                    )
+                        ? String.fromCharCode(
+                            valueB
+                        )
+                        : ".";
+            }
+
+
+            if(different){
+                cellA.classList.add(
+                    "compare-byte-diff"
+                );
+
+                cellB.classList.add(
+                    "compare-byte-diff"
+                );
+            }
+
+
+            rowA.appendChild(
+                cellA
+            );
+
+            rowB.appendChild(
+                cellB
+            );
+        }
+
+
+        const asciiCellA =
+            document.createElement(
+                "td"
+            );
+
+        const asciiCellB =
+            document.createElement(
+                "td"
+            );
+
+        asciiCellA.className =
+            "hex-ascii";
+
+        asciiCellB.className =
+            "hex-ascii";
+
+        asciiCellA.textContent =
+            asciiA;
+
+        asciiCellB.textContent =
+            asciiB;
+
+
+        rowA.appendChild(
+            asciiCellA
+        );
+
+        rowB.appendChild(
+            asciiCellB
+        );
+
+
+        bodyA.appendChild(
+            rowA
+        );
+
+        bodyB.appendChild(
+            rowB
+        );
+    }
+}
+
+
+function setupCompareScrollSync(){
+    const a =
+        document.getElementById(
+            "compareHexScrollA"
+        );
+
+    const b =
+        document.getElementById(
+            "compareHexScrollB"
+        );
+
+    if(!a || !b){
+        return;
+    }
+
+
+    let syncingA = false;
+    let syncingB = false;
+
+
+    a.onscroll = () => {
+        if(syncingA){
+            syncingA = false;
+            return;
+        }
+
+        syncingB = true;
+
+        b.scrollTop =
+            a.scrollTop;
+
+        b.scrollLeft =
+            a.scrollLeft;
+    };
+
+
+    b.onscroll = () => {
+        if(syncingB){
+            syncingB = false;
+            return;
+        }
+
+        syncingA = true;
+
+        a.scrollTop =
+            b.scrollTop;
+
+        a.scrollLeft =
+            b.scrollLeft;
+    };
+}
+
+
+function compareLoadedFiles(){
+    if(
+        !compareFileA ||
+        !compareFileB
+    ){
+        return;
+    }
+
+    const a =
+        compareFileA.bytes;
+
+    const b =
+        compareFileB.bytes;
+
+    const maxLength =
+        Math.max(
+            a.length,
+            b.length
+        );
+
+    const differences = [];
+
+    for(
+        let offset = 0;
+        offset < maxLength;
+        offset++
+    ){
+        const aValue =
+            offset < a.length
+                ? a[offset]
+                : null;
+
+        const bValue =
+            offset < b.length
+                ? b[offset]
+                : null;
+
+        if(aValue !== bValue){
+            differences.push({
+                offset,
+                a: aValue,
+                b: bValue
+            });
+        }
+    }
+
+
+    const resultCard =
+        document.getElementById(
+            "compareResultCard"
+        );
+
+    const status =
+        document.getElementById(
+            "compareResultStatus"
+        );
+
+    const count =
+        document.getElementById(
+            "compareDifferenceCount"
+        );
+
+    const sizeMatch =
+        document.getElementById(
+            "compareSizeMatch"
+        );
+
+    const body =
+        document.getElementById(
+            "compareDiffBody"
+        );
+
+
+    resultCard.style.display =
+        "";
+
+    count.textContent =
+        differences.length;
+
+    sizeMatch.textContent =
+        a.length === b.length
+            ? "YES ✓"
+            : "NO ✕";
+
+    status.classList.remove(
+        "compare-identical",
+        "compare-different"
+    );
+
+
+    if(!differences.length){
+        status.textContent =
+            "IDENTICAL ✓";
+
+        status.classList.add(
+            "compare-identical"
+        );
+    }else{
+        status.textContent =
+            "DIFFERENT";
+
+        status.classList.add(
+            "compare-different"
+        );
+    }
+
+
+    body.innerHTML = "";
+
+
+    renderCompareHexViews(
+        a,
+        b
+    );
+
+    setupCompareScrollSync();
+
+
+    for(
+        const difference of
+        differences
+    ){
+        const row =
+            document.createElement(
+                "tr"
+            );
+
+        const offset =
+            document.createElement(
+                "td"
+            );
+
+        const aCell =
+            document.createElement(
+                "td"
+            );
+
+        const bCell =
+            document.createElement(
+                "td"
+            );
+
+
+        offset.textContent =
+            "0x" +
+            formatMemoryOffset(
+                difference.offset
+            );
+
+        aCell.textContent =
+            difference.a === null
+                ? "--"
+                : difference.a
+                    .toString(16)
+                    .toUpperCase()
+                    .padStart(2, "0");
+
+        bCell.textContent =
+            difference.b === null
+                ? "--"
+                : difference.b
+                    .toString(16)
+                    .toUpperCase()
+                    .padStart(2, "0");
+
+
+        row.appendChild(
+            offset
+        );
+
+        row.appendChild(
+            aCell
+        );
+
+        row.appendChild(
+            bCell
+        );
+
+        body.appendChild(
+            row
+        );
+    }
+}
+
+
+document.addEventListener(
+    "click",
+    event => {
+        const tool =
+            event.target.closest(
+                '[data-tool="compare-files"]'
+            );
+
+        if(tool){
+            openCompareFiles();
+        }
+    }
+);
+
+
+document.addEventListener(
+    "change",
+    event => {
+        if(
+            event.target.id ===
+            "compareFileInputA"
+        ){
+            const file =
+                event.target.files &&
+                event.target.files[0];
+
+            if(file){
+                loadCompareFile(
+                    file,
+                    "A"
+                );
+            }
+
+            event.target.value = "";
+        }
+
+
+        if(
+            event.target.id ===
+            "compareFileInputB"
+        ){
+            const file =
+                event.target.files &&
+                event.target.files[0];
+
+            if(file){
+                loadCompareFile(
+                    file,
+                    "B"
+                );
+            }
+
+            event.target.value = "";
+        }
+    }
+);
+
+
+const VEHICLE_CATALOG_SOURCE =
+    __VEHICLE_CATALOG_JSON__;
+
+
+/*
+    Convert the server-side catalog schema into
+    the small camelCase structure used by the UI.
+*/
+const VEHICLE_CATALOG = {};
+
+for(
+    const make of
+    VEHICLE_CATALOG_SOURCE.makes
+){
+    VEHICLE_CATALOG[make.key] =
+        make.vehicles.map(vehicle => ({
+            key:
+                vehicle.key,
+
+            label:
+                vehicle.label,
+
+            fileLabel:
+                vehicle.file_label,
+
+            conversionType:
+                vehicle.conversion.type,
+
+            source:
+                vehicle.conversion
+                    .default_source,
+
+            target:
+                vehicle.conversion
+                    .default_target,
+
+            modelKey:
+                vehicle.model_key || null,
+
+            profilePath:
+                vehicle.profile_path || null,
+
+            physicalWorkflowEnabled:
+                Boolean(
+                    vehicle.hardware &&
+                    vehicle.hardware
+                        .physical_workflow_enabled
+                ),
+
+            hardwareStatus:
+                (
+                    vehicle.hardware &&
+                    vehicle.hardware.status
+                ) || null,
+
+            processor:
+                (
+                    vehicle.hardware &&
+                    vehicle.hardware.processor
+                ) || null
+        }));
+}
+
+
+
+const RECENT_VEHICLES_STORAGE_KEY =
+    "convertion_pro_recent_vehicles";
+
+
+function getRecentVehicleKeys(){
+    try{
+        const raw =
+            localStorage.getItem(
+                RECENT_VEHICLES_STORAGE_KEY
+            );
+
+        if(!raw){
+            return [];
+        }
+
+        const value =
+            JSON.parse(raw);
+
+        return Array.isArray(value)
+            ? value
+            : [];
+
+    }catch(error){
+        return [];
+    }
+}
+
+
+function rememberSelectedVehicle(){
+    if(!selectedVehicle){
+        return;
+    }
+
+    let keys =
+        getRecentVehicleKeys()
+            .filter(
+                key =>
+                    key !==
+                    selectedVehicle.key
+            );
+
+    keys.unshift(
+        selectedVehicle.key
+    );
+
+    keys =
+        keys.slice(0, 4);
+
+    localStorage.setItem(
+        RECENT_VEHICLES_STORAGE_KEY,
+        JSON.stringify(keys)
+    );
+
+    renderRecentVehicles();
+}
+
+
+function findVehicleInCatalog(vehicleKey){
+    for(
+        const make of
+        VEHICLE_CATALOG_SOURCE.makes
+    ){
+        const vehicle =
+            (
+                VEHICLE_CATALOG[
+                    make.key
+                ] || []
+            ).find(
+                item =>
+                    item.key ===
+                    vehicleKey
+            );
+
+        if(vehicle){
+            return {
+                make,
+                vehicle
+            };
+        }
+    }
+
+    return null;
+}
+
+
+function selectRecentVehicle(
+    makeKey,
+    vehicleKey
+){
+    const makeSelect =
+        document.getElementById(
+            "vehicleMake"
+        );
+
+    const modelSelect =
+        document.getElementById(
+            "vehicleModel"
+        );
+
+    makeSelect.value =
+        makeKey;
+
+    updateVehicleModels();
+
+    modelSelect.value =
+        vehicleKey;
+
+    updateSelectedVehicle();
+}
+
+
+function renderRecentVehicles(){
+    const grid =
+        document.getElementById(
+            "recentVehicleGrid"
+        );
+
+    if(!grid){
+        return;
+    }
+
+    grid.innerHTML = "";
+
+    const recentKeys =
+        getRecentVehicleKeys();
+
+    const validRecent = [];
+
+    for(const key of recentKeys){
+        const match =
+            findVehicleInCatalog(key);
+
+        if(match){
+            validRecent.push(match);
+        }
+    }
+
+
+    if(!validRecent.length){
+        const empty =
+            document.createElement(
+                "div"
+            );
+
+        empty.className =
+            "recent recent-empty";
+
+        empty.innerHTML =
+            "<small>NO RECENT VEHICLES</small>" +
+            "<strong>Select a supported vehicle to begin.</strong>";
+
+        grid.appendChild(empty);
+
+        return;
+    }
+
+
+    for(
+        const {
+            make,
+            vehicle
+        } of validRecent
+    ){
+        const card =
+            document.createElement(
+                "button"
+            );
+
+        card.type =
+            "button";
+
+        card.className =
+            "recent";
+
+        card.innerHTML =
+            "<small>" +
+            make.label.toUpperCase() +
+            "</small>" +
+            "<strong>" +
+            vehicle.label +
+            "</strong>";
+
+        card.addEventListener(
+            "click",
+            () => {
+                selectRecentVehicle(
+                    make.key,
+                    vehicle.key
+                );
+            }
+        );
+
+        grid.appendChild(card);
+    }
+}
+
+
+function initializeVehicleCatalog(){
+    const makeSelect =
+        document.getElementById(
+            "vehicleMake"
+        );
+
+    if(!makeSelect){
+        return;
+    }
+
+    const previousMake =
+        makeSelect.value;
+
+    makeSelect.innerHTML = "";
+
+    for(
+        const make of
+        VEHICLE_CATALOG_SOURCE.makes
+    ){
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value = make.key;
+        option.textContent =
+            make.label;
+
+        makeSelect.appendChild(
+            option
+        );
+    }
+
+    if(
+        previousMake &&
+        VEHICLE_CATALOG[
+            previousMake
+        ]
+    ){
+        makeSelect.value =
+            previousMake;
+    }
+
+    updateVehicleModels();
+    renderRecentVehicles();
+}
+
+
+let selectedVehicle = (
+    VEHICLE_CATALOG.jeep &&
+    VEHICLE_CATALOG.jeep[0]
+) || null;
 
 
 function updateVehicleModels(){
@@ -4683,8 +9514,24 @@ function updateSelectedVehicle(){
     );
 
     if(!selectedVehicle){
-        selectedVehicle =
-            VEHICLE_CATALOG.jeep[0];
+        const firstMake =
+            VEHICLE_CATALOG_SOURCE
+                .makes[0];
+
+        if(
+            firstMake &&
+            VEHICLE_CATALOG[
+                firstMake.key
+            ] &&
+            VEHICLE_CATALOG[
+                firstMake.key
+            ].length
+        ){
+            selectedVehicle =
+                VEHICLE_CATALOG[
+                    firstMake.key
+                ][0];
+        }
     }
 }
 
@@ -4772,6 +9619,7 @@ let convertedFileName = null;
 
 function openConnectionGuide(){
     updateSelectedVehicle();
+    rememberSelectedVehicle();
 
     const eyebrow = document.getElementById(
         "guideVehicleEyebrow"
@@ -4910,6 +9758,7 @@ function openConnectionGuide(){
 
 function openFileConversion(){
     updateSelectedVehicle();
+    rememberSelectedVehicle();
     selectedMemoryFile = null;
     convertedFileBytes = null;
     convertedFileName = null;
@@ -6205,7 +11054,82 @@ async function startProgramming(){
     },65);
 }
 
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+        initializeVehicleCatalog();
+    }
+);
+
+
+async function cpTestVLinker() {
+    const status = document.getElementById('cp-vlinker-status');
+    const button = document.getElementById('cp-vlinker-button');
+    if (!('serial' in navigator)) {
+        status.textContent = 'Ouvre cette page dans Chrome ou Edge sur ton PC.';
+        return;
+    }
+    button.disabled = true;
+    let port, reader, writer, timer;
+    try {
+        // La sélection doit suivre le clic sur le bouton.
+        port = await navigator.serial.requestPort();
+        await port.open({baudRate: 115200});
+        status.textContent = 'Port USB ouvert. Identification en cours…';
+        reader = port.readable.getReader();
+        writer = port.writable.getWriter();
+        await writer.write(new TextEncoder().encode('ATI\r'));
+
+        const reponse = await Promise.race([
+            (async () => {
+                const decoder = new TextDecoder();
+                let texte = '';
+                while (texte.length < 4096) {
+                    const {value, done} = await reader.read();
+                    if (done) break;
+                    texte += decoder.decode(value, {stream:true});
+                    if (texte.includes('>')) break;
+                }
+                return texte;
+            })(),
+            new Promise((_, reject) => {
+                timer = setTimeout(() => reject(new Error('Aucune réponse ATI')), 3000);
+            })
+        ]);
+        const identite = reponse.replaceAll('>', '')
+            .split(/[\r\n]+/).map(x => x.trim())
+            .filter(x => x && x.toUpperCase() !== 'ATI').join(' ');
+        status.textContent = identite && identite !== '?'
+            ? 'Interface détectée : ' + identite
+            : 'Port USB ouvert; identification incomplète.';
+    } catch (erreur) {
+        status.textContent = erreur.name === 'NotFoundError'
+            ? 'Sélection annulée.'
+            : erreur.message === 'Aucune réponse ATI'
+                ? 'Port USB ouvert, mais interface sans réponse. Une alimentation OBD peut être nécessaire.'
+                : 'Connexion impossible : ' + erreur.message;
+    } finally {
+        clearTimeout(timer);
+        if (reader) {
+            try { await reader.cancel(); } catch (_) {}
+            reader.releaseLock();
+        }
+        if (writer) writer.releaseLock();
+        if (port) {
+            try { await port.close(); } catch (_) {}
+        }
+        button.disabled = false;
+    }
+}
+
 </script>
+
+<input
+    type="file"
+    id="advancedMemoryFileInput"
+    accept=".bin,.eep,.rom,.dump,.dat"
+    style="display:none"
+>
 
 </body>
 </html>
@@ -7248,7 +12172,14 @@ async def convert_file(
 
 @app.get("/", response_class=HTMLResponse)
 async def preview():
-    return HTMLResponse(HTML)
+    rendered_html = HTML.replace(
+        "__VEHICLE_CATALOG_JSON__",
+        VEHICLE_CATALOG_JSON,
+    )
+
+    return HTMLResponse(
+        rendered_html
+    )
 
 
 if __name__ == "__main__":

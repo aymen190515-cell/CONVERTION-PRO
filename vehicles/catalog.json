@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "makes": [
+    {
+      "key": "jeep",
+      "label": "Jeep",
+      "vehicles": [
+        {
+          "key": "jeep_wrangler_2012_2018",
+          "label": "Wrangler 2012–2018",
+          "file_label": "Jeep Wrangler 2012–2018",
+          "profile_path": "vehicles/jeep/wrangler_2012_2018/profile.json",
+          "conversion": {
+            "type": "UNIT",
+            "default_source": "KM",
+            "default_target": "MI"
+          },
+          "hardware": {
+            "physical_workflow_enabled": true,
+            "status": "SIMULATED"
+          }
+        }
+      ]
+    },
+    {
+      "key": "toyota",
+      "label": "Toyota",
+      "vehicles": [
+        {
+          "key": "toyota_tundra_gas",
+          "label": "Tundra Gas",
+          "file_label": "Toyota Tundra Gas",
+          "model_key": "tundra_gas",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "CANADA",
+            "default_target": "USA"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "NOT_IMPLEMENTED",
+            "processor": "RH850 R7F701401"
+          }
+        },
+        {
+          "key": "toyota_tundra_hybrid",
+          "label": "Tundra Hybrid",
+          "file_label": "Toyota Tundra Hybrid",
+          "model_key": "tundra_hybrid",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "CANADA",
+            "default_target": "USA"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "NOT_IMPLEMENTED",
+            "processor": "RH850 R7F701401"
+          }
+        },
+        {
+          "key": "toyota_venza_hybrid",
+          "label": "Venza Hybrid",
+          "file_label": "Toyota Venza Hybrid",
+          "model_key": "venza_hybrid",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "CANADA",
+            "default_target": "USA"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "NOT_IMPLEMENTED",
+            "processor": "RH850 R7F701401"
+          }
+        },
+        {
+          "key": "toyota_highlander_limited",
+          "label": "Highlander Limited",
+          "file_label": "Toyota Highlander Limited",
+          "model_key": "highlander_limited",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "CANADA",
+            "default_target": "USA"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "NOT_IMPLEMENTED",
+            "processor": "RH850 R7F701401"
+          }
+        },
+        {
+          "key": "toyota_grand_highlander",
+          "label": "Grand Highlander",
+          "file_label": "Toyota Grand Highlander",
+          "model_key": "grand_highlander",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "CANADA",
+            "default_target": "USA"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "NOT_IMPLEMENTED",
+            "processor": "RH850 R7F701401"
+          }
+        },
+        {
+          "key": "toyota_sequoia_hybrid",
+          "label": "Sequoia Hybrid",
+          "file_label": "Toyota Sequoia Hybrid",
+          "model_key": "sequoia_hybrid",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "CANADA",
+            "default_target": "USA"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "NOT_IMPLEMENTED",
+            "processor": "RH850 R7F701401"
+          }
+        },
+        {
+          "key": "toyota_corolla",
+          "label": "Corolla",
+          "file_label": "Toyota Corolla",
+          "model_key": "corolla",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "CANADA",
+            "default_target": "USA"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "NOT_IMPLEMENTED",
+            "processor": "RH850 R7F701401"
+          }
+        },
+        {
+          "key": "toyota_sienna",
+          "label": "Sienna",
+          "file_label": "Toyota Sienna",
+          "model_key": "sienna",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "CANADA",
+            "default_target": "USA"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "NOT_IMPLEMENTED",
+            "processor": "RH850 R7F701401"
+          }
+        },
+        {
+          "key": "toyota_crown_signia",
+          "label": "Crown Signia",
+          "file_label": "Toyota Crown Signia",
+          "model_key": "crown_signia",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "CANADA",
+            "default_target": "USA"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "NOT_IMPLEMENTED",
+            "processor": "RH850 R7F701401"
+          }
+        },
+        {
+          "key": "toyota_rav4",
+          "label": "RAV4",
+          "file_label": "Toyota RAV4",
+          "model_key": "rav4",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "CANADA",
+            "default_target": "USA"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "NOT_IMPLEMENTED",
+            "processor": "RH850 R7F701401"
+          }
+        }
+      ]
+    }
+  ]
+}
