@@ -2,10 +2,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from pathlib import Path
+from importlib.resources import files
 import hashlib
 import json
 import uvicorn
 
+from convertion_pro.core.cluster_read import VehicleReadService
 from convertion_pro.core.workflow import ConversionWorkflow
 from convertion_pro.core.vehicle_catalog import (
     load_vehicle_catalog,
@@ -25,6 +27,7 @@ app = FastAPI(title="CONVERTION-PRO Preview")
 app.include_router(chip_router)
 
 VEHICLE_CATALOG_DATA = load_vehicle_catalog()
+VEHICLE_READ_SERVICE = VehicleReadService(VEHICLE_CATALOG_DATA)
 
 VEHICLE_CATALOG_JSON = json.dumps(
     VEHICLE_CATALOG_DATA,
@@ -4126,14 +4129,14 @@ footer{
 <p role="note">Memory sources: HARDWARE (not implemented), SIMULATED (synthetic Jeep demo),
 or FILE (bytes from an opened file). USB/CAN adapter detection does not prove cluster memory access.</p>
 <div class="tool-grid">
-        <button class="tool tool-ready" data-tool="read-memory-demo">
-            <strong>Simulated Jeep memory demo</strong>
-            <small>Synthetic 1024-byte sample. No vehicle or adapter is accessed.</small>
+        <button class="tool tool-ready" data-tool="read-memory-demo" disabled>
+            <strong>Simulation — véhicule sélectionné</strong>
+            <small id="vehicleSimulationReason">Choisir un véhicule avec un pilote de simulation.</small>
         </button>
 
-        <button class="tool tool-ready" data-tool="read-memory">
+        <button class="tool tool-ready" data-tool="read-memory" disabled>
             <strong>Read Memory — Hardware</strong>
-            <small>Unavailable: physical cluster memory reading is not implemented.</small>
+            <small id="vehicleReadReason">Profil exact et protocole documenté requis.</small>
         </button>
 
         <button
@@ -5366,7 +5369,7 @@ or FILE (bytes from an opened file). USB/CAN adapter detection does not prove cl
 
     <div class="footer-status">
         <span class="footer-dot"></span>
-        Programmer Connected
+        <span id="cp-programmer-status">Programmateur EEPROM : non prêt · adaptateur déconnecté</span>
     </div>
 
     <div class="footer-right">
@@ -5382,16 +5385,22 @@ or FILE (bytes from an opened file). USB/CAN adapter detection does not prove cl
 
 <div id="cp-vlinker-panel" style="position:fixed;right:16px;bottom:16px;z-index:9999;
 background:#101924;color:#f4f7fb;border:1px solid #26384b;border-radius:10px;
-padding:12px;max-width:310px;box-shadow:0 8px 24px #0008">
-  <button id="cp-vlinker-button" type="button" onclick="cpTestVLinker()"
-    style="background:#1687ff;color:white;border:0;border-radius:7px;padding:9px 12px">
-    Tester le vLinker USB
-  </button>
-  <div id="cp-vlinker-status" role="status" style="margin-top:8px;font-size:13px">
-    Aucun câble testé
-  </div>
+padding:12px;max-width:350px;box-shadow:0 8px 24px #0008">
+  <label>Débit série PC (pas CAN)
+    <select id="cp-vlinker-baud"><option>115200</option><option>38400</option><option>9600</option></select>
+  </label>
+  <button id="cp-vlinker-button" type="button" onclick="cpTestVLinker()">Connecter le vLinker USB</button>
+  <button id="cp-vlinker-disconnect" type="button" onclick="cpDisconnectVLinker()" disabled>Déconnecter</button>
+  <button id="cp-vlinker-voltage" type="button" onclick="cpVLinkerVoltage()" disabled>Tension adaptateur</button>
+  <button type="button" onclick="cpExportVLinkerLog()">Exporter le journal</button>
+  <div id="cp-vlinker-status" role="status" style="margin-top:8px;font-size:13px">Adaptateur : déconnecté</div>
+  <div>Cluster identifié : NON</div>
+  <div>Lecture EEPROM disponible : NON</div>
+  <div id="cp-cluster-blocked" style="font-size:12px"></div>
+  <div id="cp-vlinker-measurement" role="status"></div>
 </div>
 <script>
+__VLINKER_TRANSPORT_JS__
 
 let advancedToolsReturnScreen = 'select';
 
@@ -5584,6 +5593,7 @@ function openVehicleAdvancedTools(){
     landing screen. Once memory is opened/read, the
     Hex Workspace automatically gains Convert Cluster.
     */
+    refreshVehicleReadCapabilities();
     show("advanced");
 }
 
@@ -5782,6 +5792,7 @@ function openSelectedGenericAdvancedTools(){
 
     updateAdvancedContextBanner();
 
+    refreshVehicleReadCapabilities();
     show("advanced");
 }
 
@@ -5880,6 +5891,7 @@ function openAdvancedTools(returnScreen){
 
     updateAdvancedContextBanner();
 
+    refreshVehicleReadCapabilities();
     show("advanced");
 }
 
@@ -6036,18 +6048,22 @@ function populateMemoryWorkspace({
     document.getElementById(
         "memoryVoltage"
     ).textContent =
-        voltage == null
-            ? "N/A · FILE MODE"
-            : Number(voltage).toFixed(1) +
-              " V";
+        source === "FILE"
+            ? "N/A · FILE — NO PHYSICAL MEASUREMENT"
+            : source === "SIMULATED"
+                ? (voltage == null ? "N/A" : Number(voltage).toFixed(1) + " V") +
+                  " · SIMULATED — NO HARDWARE VALIDATION"
+                : "N/A · UNVERIFIED SOURCE";
 
     document.getElementById(
         "memoryCurrent"
     ).textContent =
-        current == null
-            ? "N/A · FILE MODE"
-            : Number(current).toFixed(2) +
-              " A · MONITORING";
+        source === "FILE"
+            ? "N/A · FILE — NO PHYSICAL MEASUREMENT"
+            : source === "SIMULATED"
+                ? (current == null ? "N/A" : Number(current).toFixed(2) + " A") +
+                  " · SIMULATED — NO HARDWARE VALIDATION"
+                : "N/A · UNVERIFIED SOURCE";
 
     document.getElementById(
         "memoryType"
@@ -6283,7 +6299,32 @@ document.addEventListener(
 );
 
 
+async function refreshVehicleReadCapabilities(){
+    const key = vehicleContext && workspaceMode !== 'GENERIC_ADVANCED' ? vehicleContext.key : '';
+    const demo = document.querySelector('[data-tool="read-memory-demo"]');
+    demo.disabled = true;
+    document.getElementById('vehicleReadReason').textContent = 'Aucun profil véhicule sélectionné pour la lecture.';
+    document.getElementById('vehicleSimulationReason').textContent = 'Aucun pilote de simulation sélectionné.';
+    if(!key) return;
+    try {
+        const response = await fetch('/api/vehicles/read-capability?vehicle_key=' + encodeURIComponent(key));
+        const data = await response.json();
+        if(!vehicleContext || vehicleContext.key !== key || workspaceMode === 'GENERIC_ADVANCED') return;
+        if(!response.ok) throw new Error(data.detail);
+        demo.disabled = !data.simulation_available;
+        document.getElementById('vehicleSimulationReason').textContent = data.simulation_available
+            ? 'Données synthétiques ; aucun matériel accédé.' : 'Aucun pilote de simulation pour ce véhicule.';
+        document.getElementById('vehicleReadReason').textContent = data.reason;
+        document.getElementById('cp-cluster-blocked').textContent = data.reason;
+    } catch(error) { document.getElementById('vehicleReadReason').textContent = error.message; }
+}
+
 async function readMemory(mode = "HARDWARE"){
+    // A failed/blocked read must never leave an earlier demo available to save.
+    currentMemoryBytes = [];
+    originalMemoryBytes = [];
+    currentMemoryFilename = null;
+    currentMemorySource = null;
     show('memory');
 
     const loading = document.getElementById('memoryLoading');
@@ -6296,8 +6337,10 @@ async function readMemory(mode = "HARDWARE"){
     errorBox.textContent = '';
 
     try {
+        const vehicleKey = vehicleContext && workspaceMode !== 'GENERIC_ADVANCED' ? vehicleContext.key : '';
+        if(!vehicleKey) throw new Error('Sélectionner un profil véhicule ; aucun repli vers la simulation Jeep.');
         const response = await fetch(
-            '/api/advanced/read-memory?mode=' + encodeURIComponent(mode),
+            '/api/advanced/read-memory?mode=' + encodeURIComponent(mode) + '&vehicle_key=' + encodeURIComponent(vehicleKey),
             {method:'POST'}
         );
 
@@ -6310,6 +6353,9 @@ async function readMemory(mode = "HARDWARE"){
             );
         }
 
+        if(data.vehicle_key !== vehicleKey || !vehicleContext || vehicleContext.key !== vehicleKey || workspaceMode === "GENERIC_ADVANCED"){
+            throw new Error("Le véhicule sélectionné a changé ; résultat ignoré.");
+        }
         if(mode !== "SIMULATED" || data.source !== "SIMULATED" || data.hardware_access !== false){
             throw new Error('Unverified memory source. Physical memory reading is not implemented.');
         }
@@ -6354,7 +6400,7 @@ async function readMemory(mode = "HARDWARE"){
             bytes,
             source: "SIMULATED",
             filename:
-                "simulated_jeep_demo.bin",
+                data.filename,
             sha256:
                 data.sha256,
             memoryType:
@@ -9225,6 +9271,9 @@ for(
                     vehicle.hardware.status
                 ) || null,
 
+            connectionGuide:
+                vehicle.connection_guide,
+
             processor:
                 (
                     vehicle.hardware &&
@@ -9670,103 +9719,43 @@ function openConnectionGuide(){
     );
 
 
-    if(
-        selectedVehicle.key ===
-        "jeep_wrangler_2012_2018"
-    ){
-        eyebrow.textContent =
-            "JEEP · WRANGLER 2012–2018";
+    const guide = selectedVehicle.connectionGuide;
 
-        clusterScreen.innerHTML =
-            "JEEP<br>WRANGLER";
+    eyebrow.textContent = guide.eyebrow;
+    clusterScreen.replaceChildren();
+    guide.cluster_lines.forEach((line, index) => {
+        if(index){
+            clusterScreen.appendChild(
+                document.createElement("br")
+            );
+        }
+        clusterScreen.appendChild(
+            document.createTextNode(line)
+        );
+    });
 
-        method.textContent =
-            "Bench";
+    method.textContent = guide.method;
+    cable.textContent = guide.cable;
+    supply.textContent = guide.supply;
+    power.textContent = guide.power_state;
 
-        cable.textContent =
-            "CP-JEEP-004";
+    steps.replaceChildren();
+    guide.steps.forEach((text, index) => {
+        const item = document.createElement("li");
+        const number = document.createElement("span");
+        number.className = "num";
+        number.textContent = String(index + 1);
+        item.appendChild(number);
+        item.appendChild(
+            document.createTextNode(" " + text)
+        );
+        steps.appendChild(item);
+    });
 
-        supply.textContent =
-            "12.0 V";
-
-        power.textContent =
-            "OFF";
-
-        steps.innerHTML = `
-            <li>
-                <span class="num">1</span>
-                Connect CP-JEEP-004 to the
-                instrument cluster.
-            </li>
-
-            <li>
-                <span class="num">2</span>
-                Connect the universal end to
-                the programmer.
-            </li>
-
-            <li>
-                <span class="num">3</span>
-                Keep cluster power OFF until
-                verification.
-            </li>
-        `;
-
-        proceed.disabled = false;
-        proceed.textContent = "Proceed →";
-
-    }else if(
-        selectedVehicle.key.startsWith(
-            "toyota_"
-        )
-    ){
-        eyebrow.textContent =
-            "TOYOTA · " +
-            selectedVehicle.label.toUpperCase();
-
-        clusterScreen.innerHTML =
-            "TOYOTA<br>" +
-            selectedVehicle.label
-                .toUpperCase();
-
-        method.textContent =
-            "RH850";
-
-        cable.textContent =
-            "NOT CONFIGURED";
-
-        supply.textContent =
-            "NOT CONFIGURED";
-
-        power.textContent =
-            "OFF";
-
-        steps.innerHTML = `
-            <li>
-                <span class="num">1</span>
-                Processor profile:
-                RH850 R7F701401.
-            </li>
-
-            <li>
-                <span class="num">2</span>
-                Toyota hardware communication
-                profile is not implemented yet.
-            </li>
-
-            <li>
-                <span class="num">3</span>
-                Connection pinout, supply and
-                access method must be validated
-                before programming.
-            </li>
-        `;
-
-        proceed.disabled = true;
-
-        proceed.textContent =
-            "RH850 DRIVER REQUIRED";
-    }
+    proceed.disabled = !guide.proceed_enabled;
+    proceed.textContent = guide.proceed_enabled
+        ? "Proceed →"
+        : guide.blocked_reason;
 
     show("guide");
 }
@@ -11078,64 +11067,53 @@ document.addEventListener(
 );
 
 
+const cpClusterDriver = new ClusterDriver();
+document.getElementById('cp-cluster-blocked').textContent = cpClusterDriver.capability().reason;
+const cpAdapter = new AdapterSerialTransport({
+    serial: navigator.serial,
+    onState: ({state, detail, identity}) => {
+        const connected = state === 'CONNECTED';
+        document.getElementById('cp-programmer-status').textContent =
+            'Programmateur EEPROM : non prêt · adaptateur ' + (connected ? 'connecté' : 'non connecté');
+        document.getElementById('cp-vlinker-status').textContent =
+            'Adaptateur : ' + (connected ? 'connecté — ' + identity : state) +
+            (detail ? ' · ' + detail : '');
+        document.getElementById('cp-vlinker-button').disabled = state !== 'DISCONNECTED';
+        document.getElementById('cp-vlinker-baud').disabled = state !== 'DISCONNECTED';
+        document.getElementById('cp-vlinker-disconnect').disabled = !connected;
+        document.getElementById('cp-vlinker-voltage').disabled = !connected;
+        if (!connected) document.getElementById('cp-vlinker-measurement').textContent = '';
+    }
+});
 async function cpTestVLinker() {
-    const status = document.getElementById('cp-vlinker-status');
-    const button = document.getElementById('cp-vlinker-button');
-    if (!('serial' in navigator)) {
-        status.textContent = 'Ouvre cette page dans Chrome ou Edge sur ton PC.';
-        return;
-    }
-    button.disabled = true;
-    let port, reader, writer, timer;
     try {
-        // La sélection doit suivre le clic sur le bouton.
-        port = await navigator.serial.requestPort();
-        await port.open({baudRate: 115200});
-        status.textContent = 'Port USB ouvert. Identification en cours…';
-        reader = port.readable.getReader();
-        writer = port.writable.getWriter();
-        await writer.write(new TextEncoder().encode('ATI\r'));
-
-        const reponse = await Promise.race([
-            (async () => {
-                const decoder = new TextDecoder();
-                let texte = '';
-                while (texte.length < 4096) {
-                    const {value, done} = await reader.read();
-                    if (done) break;
-                    texte += decoder.decode(value, {stream:true});
-                    if (texte.includes('>')) break;
-                }
-                return texte;
-            })(),
-            new Promise((_, reject) => {
-                timer = setTimeout(() => reject(new Error('Aucune réponse ATI')), 3000);
-            })
-        ]);
-        const identite = reponse.replaceAll('>', '')
-            .split(/[\r\n]+/).map(x => x.trim())
-            .filter(x => x && x.toUpperCase() !== 'ATI').join(' ');
-        status.textContent = identite && identite !== '?'
-            ? 'Interface détectée : ' + identite
-            : 'Port USB ouvert; identification incomplète.';
-    } catch (erreur) {
-        status.textContent = erreur.name === 'NotFoundError'
-            ? 'Sélection annulée.'
-            : erreur.message === 'Aucune réponse ATI'
-                ? 'Port USB ouvert, mais interface sans réponse. Une alimentation OBD peut être nécessaire.'
-                : 'Connexion impossible : ' + erreur.message;
-    } finally {
-        clearTimeout(timer);
-        if (reader) {
-            try { await reader.cancel(); } catch (_) {}
-            reader.releaseLock();
-        }
-        if (writer) writer.releaseLock();
-        if (port) {
-            try { await port.close(); } catch (_) {}
-        }
-        button.disabled = false;
+        await cpAdapter.connect(Number(document.getElementById('cp-vlinker-baud').value));
+    } catch (error) {
+        document.getElementById('cp-vlinker-status').textContent = 'Adaptateur : non connecté · ' + error.message;
     }
+}
+async function cpDisconnectVLinker() { await cpAdapter.disconnect(); }
+async function cpVLinkerVoltage() {
+    const button = document.getElementById('cp-vlinker-voltage');
+    button.disabled = true;
+    try {
+        const value = await cpAdapter.voltage();
+        document.getElementById('cp-vlinker-measurement').textContent =
+            value === null
+                ? 'Tension indisponible ; aucune validation de l’alimentation du cluster.'
+                : 'Mesure déclarée par l’adaptateur : ' + value + ' ; aucune validation du cluster.';
+    } catch (error) {
+        document.getElementById('cp-vlinker-measurement').textContent = error.message;
+        cpAdapter.record('ERROR', error.message);
+    } finally { button.disabled = cpAdapter.state !== 'CONNECTED'; }
+}
+function cpExportVLinkerLog() {
+    const url = URL.createObjectURL(new Blob([cpAdapter.exportLog()], {type: 'application/json'}));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'convertion-pro-adapter-log.json';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 </script>
@@ -11525,116 +11503,25 @@ async def advanced_memory_capability(chip: str = "", access: str = "", transport
     return memory_capability(chip, access, transport, controller_protocol, mode, package, mask)
 
 
-@app.post("/api/advanced/read-memory")
-async def advanced_read_memory(mode: str = "HARDWARE"):
-    """
-    Read-only development memory operation.
-
-    Synthetic Jeep data is available only through explicit SIMULATED mode.
-    Physical reads fail closed before constructing a programmer or a buffer.
-    """
-    if mode != "SIMULATED":
-        return JSONResponse(status_code=501 if mode == "HARDWARE" else 422, content={
-            "success": False,
-            "source": "HARDWARE" if mode == "HARDWARE" else "UNKNOWN",
-            "hardware_access": False,
-            "read_only": True,
-            "memory_read_supported": False,
-            "detail": "Physical cluster memory reading is not implemented. USB/ELM/CAN detection does not establish EEPROM access. Identify the cluster and its supported protocol first. Use Open File for an existing dump, or explicitly select the simulated Jeep demo.",
-        })
-
+@app.get("/api/vehicles/read-capability")
+async def vehicle_read_capability(vehicle_key: str = ""):
     try:
-        profile_path = Path(
-            "vehicles/jeep/wrangler_2012_2018/profile.json"
-        )
+        return VEHICLE_READ_SERVICE.capabilities(vehicle_key)
+    except RuntimeError as error:
+        return JSONResponse(status_code=422, content={"detail": str(error)})
 
-        if not profile_path.exists():
-            raise RuntimeError(
-                "Jeep vehicle profile not found."
-            )
 
-        profile = json.loads(
-            profile_path.read_text(encoding="utf-8")
-        )
-
-        expected_size = int(
-            profile["memory"]["size_bytes"]
-        )
-
-        # Synthetic development EEPROM.
-        # No private vehicle/customer data is used here.
-        demo_memory = bytearray(
-            [0xFF] * expected_size
-        )
-
-        # Known development values for the validated Jeep
-        # conversion offsets. These are synthetic test values.
-        demo_memory[0x68] = 0x04
-        demo_memory[0x69] = 0x12
-
-        hardware = SimulatedProgrammer(
-            memory=demo_memory
-        )
-
-        workflow = ConversionWorkflow(
-            hardware,
-            profile,
-        )
-
-        report = workflow.run_safety_check()
-
-        if not report.passed:
-            raise RuntimeError(
-                "Memory read blocked because safety checks failed."
-            )
-
-        memory = hardware.read_memory()
-
-        if len(memory) != expected_size:
-            raise RuntimeError(
-                "Memory size mismatch. "
-                f"Expected {expected_size} bytes, "
-                f"received {len(memory)}."
-            )
-
-        digest = hashlib.sha256(
-            memory
-        ).hexdigest()
-
-        return {
-            "success": True,
-            "read_only": True,
-            "source": "SIMULATED",
-            "hardware_access": False,
-            "memory_read_supported": False,
-            "vehicle": "SIMULATED Jeep Wrangler 2012-2018 demo",
-            "memory_type": profile["memory"]["type"],
-            "memory_size": len(memory),
-            "sha256": digest,
-            "cluster_id": hardware.identify_cluster(),
-            "cable": hardware.identify_cable(),
-            "voltage": hardware.measure_voltage(),
-            "current": hardware.measure_current(),
-            "current_validated": False,
-            "data_hex": memory.hex(),
-            "annotations": [
-                {
-                    "offset": 0x68,
-                    "label": "Validated conversion offset 0x68"
-                },
-                {
-                    "offset": 0x69,
-                    "label": "Validated conversion offset 0x69"
-                }
-            ],
-        }
-
-    except Exception as error:
-        return {
-            "success": False,
-            "read_only": True,
-            "detail": str(error),
-        }
+@app.post("/api/advanced/read-memory")
+async def advanced_read_memory(mode: str = "HARDWARE", vehicle_key: str = ""):
+    try:
+        return VEHICLE_READ_SERVICE.read(vehicle_key, mode)
+    except (ValueError, RuntimeError, OSError, KeyError) as error:
+        return JSONResponse(status_code=501 if mode == "HARDWARE" else 422, content={
+            "success": False, "source": mode, "hardware_access": False,
+            "read_only": True, "memory_read_supported": False,
+            "cluster_identified": False, "programmer_ready": False,
+            "vehicle_key": vehicle_key, "detail": str(error),
+        })
 
 
 @app.post("/api/convert")
@@ -12210,6 +12097,10 @@ async def preview():
         VEHICLE_CATALOG_JSON,
     )
 
+    rendered_html = rendered_html.replace(
+        "__VLINKER_TRANSPORT_JS__",
+        files("convertion_pro.ui").joinpath("vlinker_transport.js").read_text(encoding="utf-8"),
+    )
     return HTMLResponse(
         rendered_html
     )

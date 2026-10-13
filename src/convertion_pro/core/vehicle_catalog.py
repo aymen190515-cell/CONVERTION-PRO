@@ -33,7 +33,8 @@ def load_vehicle_catalog(
             f"Invalid vehicle catalog JSON: {error}"
         ) from error
 
-    if catalog.get("schema_version") != 1:
+    schema_version = catalog.get("schema_version")
+    if schema_version not in (1, 2):
         raise VehicleCatalogError(
             "Unsupported vehicle catalog schema."
         )
@@ -117,6 +118,69 @@ def load_vehicle_catalog(
             if not isinstance(hardware, dict):
                 raise VehicleCatalogError(
                     f"{key} has no hardware profile."
+                )
+
+            guide = vehicle.get("connection_guide")
+            # Version 1 did not require a guide. Keep those catalogs readable
+            # without guessing wiring or granting hardware access.
+            if schema_version == 1 and "connection_guide" not in vehicle:
+                guide = vehicle["connection_guide"] = {
+                    "eyebrow": make_label.upper() + " · " + vehicle["label"].upper(),
+                    "cluster_lines": [make_label.upper(), vehicle["label"].upper()],
+                    "method": "NOT CONFIGURED",
+                    "cable": "NOT CONFIGURED",
+                    "supply": "NOT CONFIGURED",
+                    "power_state": "OFF",
+                    "steps": ["Connection guide is not configured for this vehicle."],
+                    "proceed_enabled": False,
+                    "blocked_reason": "CONNECTION GUIDE REQUIRED",
+                }
+            if not isinstance(guide, dict):
+                raise VehicleCatalogError(
+                    f"{key} has no connection guide."
+                )
+
+            for field in (
+                "eyebrow", "method", "cable", "supply", "power_state",
+            ):
+                value = guide.get(field)
+                if not isinstance(value, str) or not value.strip():
+                    raise VehicleCatalogError(
+                        f"{key} has invalid connection guide {field}."
+                    )
+
+            for field in ("cluster_lines", "steps"):
+                values = guide.get(field)
+                if (
+                    not isinstance(values, list)
+                    or not values
+                    or any(
+                        not isinstance(value, str) or not value.strip()
+                        for value in values
+                    )
+                ):
+                    raise VehicleCatalogError(
+                        f"{key} has invalid connection guide {field}."
+                    )
+
+            enabled = guide.get("proceed_enabled")
+            if not isinstance(enabled, bool):
+                raise VehicleCatalogError(
+                    f"{key} has invalid connection guide proceed_enabled."
+                )
+            reason = guide.get("blocked_reason")
+            if enabled:
+                if hardware.get("physical_workflow_enabled") is not True:
+                    raise VehicleCatalogError(
+                        f"{key} cannot proceed with physical workflow disabled."
+                    )
+                if reason is not None:
+                    raise VehicleCatalogError(
+                        f"{key} has a blocked reason while proceed is enabled."
+                    )
+            elif not isinstance(reason, str) or not reason.strip():
+                raise VehicleCatalogError(
+                    f"{key} requires a connection guide blocked reason."
                 )
 
     return catalog

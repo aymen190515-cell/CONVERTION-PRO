@@ -27,7 +27,7 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-"convertion_pro.ui" = ["*.html"]
+"convertion_pro.ui" = ["*.html", "*.js"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

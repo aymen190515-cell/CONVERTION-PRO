@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "makes": [
     {
       "key": "jeep",
@@ -18,6 +18,29 @@
           "hardware": {
             "physical_workflow_enabled": true,
             "status": "SIMULATED"
+          },
+          "connection_guide": {
+            "eyebrow": "JEEP · WRANGLER 2012–2018",
+            "cluster_lines": [
+              "JEEP",
+              "WRANGLER"
+            ],
+            "method": "Bench",
+            "cable": "CP-JEEP-004",
+            "supply": "12.0 V",
+            "power_state": "OFF",
+            "steps": [
+              "Connect CP-JEEP-004 to the instrument cluster.",
+              "Connect the universal end to the programmer.",
+              "Keep cluster power OFF until verification."
+            ],
+            "proceed_enabled": true,
+            "blocked_reason": null
+          },
+          "cluster_profile": {
+            "id": "jeep_wrangler_2012_2018_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": "SYNTHETIC_JEEP_1024"
           }
         }
       ]
@@ -40,6 +63,29 @@
             "physical_workflow_enabled": false,
             "status": "NOT_IMPLEMENTED",
             "processor": "RH850 R7F701401"
+          },
+          "connection_guide": {
+            "eyebrow": "TOYOTA · TUNDRA GAS",
+            "cluster_lines": [
+              "TOYOTA",
+              "TUNDRA GAS"
+            ],
+            "method": "RH850",
+            "cable": "NOT CONFIGURED",
+            "supply": "NOT CONFIGURED",
+            "power_state": "OFF",
+            "steps": [
+              "Processor profile: RH850 R7F701401.",
+              "Toyota hardware communication profile is not implemented yet.",
+              "Connection pinout, supply and access method must be validated before programming."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "RH850 DRIVER REQUIRED"
+          },
+          "cluster_profile": {
+            "id": "toyota_tundra_gas_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
           }
         },
         {
@@ -56,6 +102,29 @@
             "physical_workflow_enabled": false,
             "status": "NOT_IMPLEMENTED",
             "processor": "RH850 R7F701401"
+          },
+          "connection_guide": {
+            "eyebrow": "TOYOTA · TUNDRA HYBRID",
+            "cluster_lines": [
+              "TOYOTA",
+              "TUNDRA HYBRID"
+            ],
+            "method": "RH850",
+            "cable": "NOT CONFIGURED",
+            "supply": "NOT CONFIGURED",
+            "power_state": "OFF",
+            "steps": [
+              "Processor profile: RH850 R7F701401.",
+              "Toyota hardware communication profile is not implemented yet.",
+              "Connection pinout, supply and access method must be validated before programming."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "RH850 DRIVER REQUIRED"
+          },
+          "cluster_profile": {
+            "id": "toyota_tundra_hybrid_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
           }
         },
         {
@@ -72,6 +141,29 @@
             "physical_workflow_enabled": false,
             "status": "NOT_IMPLEMENTED",
             "processor": "RH850 R7F701401"
+          },
+          "connection_guide": {
+            "eyebrow": "TOYOTA · VENZA HYBRID",
+            "cluster_lines": [
+              "TOYOTA",
+              "VENZA HYBRID"
+            ],
+            "method": "RH850",
+            "cable": "NOT CONFIGURED",
+            "supply": "NOT CONFIGURED",
+            "power_state": "OFF",
+            "steps": [
+              "Processor profile: RH850 R7F701401.",
+              "Toyota hardware communication profile is not implemented yet.",
+              "Connection pinout, supply and access method must be validated before programming."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "RH850 DRIVER REQUIRED"
+          },
+          "cluster_profile": {
+            "id": "toyota_venza_hybrid_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
           }
         },
         {
@@ -88,6 +180,29 @@
             "physical_workflow_enabled": false,
             "status": "NOT_IMPLEMENTED",
             "processor": "RH850 R7F701401"
+          },
+          "connection_guide": {
+            "eyebrow": "TOYOTA · HIGHLANDER LIMITED",
+            "cluster_lines": [
+              "TOYOTA",
+              "HIGHLANDER LIMITED"
+            ],
+            "method": "RH850",
+            "cable": "NOT CONFIGURED",
+            "supply": "NOT CONFIGURED",
+            "power_state": "OFF",
+            "steps": [
+              "Processor profile: RH850 R7F701401.",
+              "Toyota hardware communication profile is not implemented yet.",
+              "Connection pinout, supply and access method must be validated before programming."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "RH850 DRIVER REQUIRED"
+          },
+          "cluster_profile": {
+            "id": "toyota_highlander_limited_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
           }
         },
         {
@@ -104,6 +219,29 @@
             "physical_workflow_enabled": false,
             "status": "NOT_IMPLEMENTED",
             "processor": "RH850 R7F701401"
+          },
+          "connection_guide": {
+            "eyebrow": "TOYOTA · GRAND HIGHLANDER",
+            "cluster_lines": [
+              "TOYOTA",
+              "GRAND HIGHLANDER"
+            ],
+            "method": "RH850",
+            "cable": "NOT CONFIGURED",
+            "supply": "NOT CONFIGURED",
+            "power_state": "OFF",
+            "steps": [
+              "Processor profile: RH850 R7F701401.",
+              "Toyota hardware communication profile is not implemented yet.",
+              "Connection pinout, supply and access method must be validated before programming."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "RH850 DRIVER REQUIRED"
+          },
+          "cluster_profile": {
+            "id": "toyota_grand_highlander_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
           }
         },
         {
@@ -120,6 +258,29 @@
             "physical_workflow_enabled": false,
             "status": "NOT_IMPLEMENTED",
             "processor": "RH850 R7F701401"
+          },
+          "connection_guide": {
+            "eyebrow": "TOYOTA · SEQUOIA HYBRID",
+            "cluster_lines": [
+              "TOYOTA",
+              "SEQUOIA HYBRID"
+            ],
+            "method": "RH850",
+            "cable": "NOT CONFIGURED",
+            "supply": "NOT CONFIGURED",
+            "power_state": "OFF",
+            "steps": [
+              "Processor profile: RH850 R7F701401.",
+              "Toyota hardware communication profile is not implemented yet.",
+              "Connection pinout, supply and access method must be validated before programming."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "RH850 DRIVER REQUIRED"
+          },
+          "cluster_profile": {
+            "id": "toyota_sequoia_hybrid_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
           }
         },
         {
@@ -136,6 +297,29 @@
             "physical_workflow_enabled": false,
             "status": "NOT_IMPLEMENTED",
             "processor": "RH850 R7F701401"
+          },
+          "connection_guide": {
+            "eyebrow": "TOYOTA · COROLLA",
+            "cluster_lines": [
+              "TOYOTA",
+              "COROLLA"
+            ],
+            "method": "RH850",
+            "cable": "NOT CONFIGURED",
+            "supply": "NOT CONFIGURED",
+            "power_state": "OFF",
+            "steps": [
+              "Processor profile: RH850 R7F701401.",
+              "Toyota hardware communication profile is not implemented yet.",
+              "Connection pinout, supply and access method must be validated before programming."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "RH850 DRIVER REQUIRED"
+          },
+          "cluster_profile": {
+            "id": "toyota_corolla_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
           }
         },
         {
@@ -152,6 +336,29 @@
             "physical_workflow_enabled": false,
             "status": "NOT_IMPLEMENTED",
             "processor": "RH850 R7F701401"
+          },
+          "connection_guide": {
+            "eyebrow": "TOYOTA · SIENNA",
+            "cluster_lines": [
+              "TOYOTA",
+              "SIENNA"
+            ],
+            "method": "RH850",
+            "cable": "NOT CONFIGURED",
+            "supply": "NOT CONFIGURED",
+            "power_state": "OFF",
+            "steps": [
+              "Processor profile: RH850 R7F701401.",
+              "Toyota hardware communication profile is not implemented yet.",
+              "Connection pinout, supply and access method must be validated before programming."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "RH850 DRIVER REQUIRED"
+          },
+          "cluster_profile": {
+            "id": "toyota_sienna_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
           }
         },
         {
@@ -168,6 +375,29 @@
             "physical_workflow_enabled": false,
             "status": "NOT_IMPLEMENTED",
             "processor": "RH850 R7F701401"
+          },
+          "connection_guide": {
+            "eyebrow": "TOYOTA · CROWN SIGNIA",
+            "cluster_lines": [
+              "TOYOTA",
+              "CROWN SIGNIA"
+            ],
+            "method": "RH850",
+            "cable": "NOT CONFIGURED",
+            "supply": "NOT CONFIGURED",
+            "power_state": "OFF",
+            "steps": [
+              "Processor profile: RH850 R7F701401.",
+              "Toyota hardware communication profile is not implemented yet.",
+              "Connection pinout, supply and access method must be validated before programming."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "RH850 DRIVER REQUIRED"
+          },
+          "cluster_profile": {
+            "id": "toyota_crown_signia_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
           }
         },
         {
@@ -184,6 +414,29 @@
             "physical_workflow_enabled": false,
             "status": "NOT_IMPLEMENTED",
             "processor": "RH850 R7F701401"
+          },
+          "connection_guide": {
+            "eyebrow": "TOYOTA · RAV4",
+            "cluster_lines": [
+              "TOYOTA",
+              "RAV4"
+            ],
+            "method": "RH850",
+            "cable": "NOT CONFIGURED",
+            "supply": "NOT CONFIGURED",
+            "power_state": "OFF",
+            "steps": [
+              "Processor profile: RH850 R7F701401.",
+              "Toyota hardware communication profile is not implemented yet.",
+              "Connection pinout, supply and access method must be validated before programming."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "RH850 DRIVER REQUIRED"
+          },
+          "cluster_profile": {
+            "id": "toyota_rav4_unconfirmed",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
           }
         }
       ]

@@ -29,7 +29,7 @@ client = TestClient(app)
 
 def read_memory():
     response = client.post(
-        "/api/advanced/read-memory?mode=SIMULATED"
+        "/api/advanced/read-memory?mode=SIMULATED&vehicle_key=jeep_wrangler_2012_2018"
     )
 
     assert response.status_code == 200
