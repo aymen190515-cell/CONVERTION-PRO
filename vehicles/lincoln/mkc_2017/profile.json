@@ -1,0 +1,43 @@
+{
+  "make": "Lincoln",
+  "model": "MKC",
+  "generation": "2017",
+  "connection_method": "BENCH",
+  "required_cable": "VLINKER-FS-USB",
+  "cluster_id": "FORD-MKC-IPC-DS-EM2T-1A292-JAC",
+  "cluster_part_number": "GJ7T-10849-AJ",
+  "cluster_board": "Visteon PWB20128 VPDS7F-14A608-AH",
+  "bench_wiring": {
+    "ground_pin": 5,
+    "vbatt_pin": 21,
+    "hs3_can_plus_pin": 25,
+    "hs3_can_minus_pin": 26
+  },
+  "diagnostic": {
+    "adapter": "Vgate vLinker FS USB (ELM327)",
+    "can_speed_kbit_s": 500,
+    "ipc_request_id": "720",
+    "ipc_response_id": "728",
+    "session": "1001 default",
+    "identification_did": "F110",
+    "identification_value": "DS-EM2T-1A292-JAC"
+  },
+  "voltage_min": 11.8,
+  "voltage_max": 13.8,
+  "memory": {
+    "type": "EEPROM",
+    "chip": "24C32",
+    "size_bytes": 4096
+  },
+  "conversion": {
+    "type": "REGION_KM_MILES_AND_BRAKE_ICON",
+    "offset": "0x2D6",
+    "km_value": "0x81",
+    "miles_value": "0x01",
+    "km_brake_icon": "symbol",
+    "miles_brake_icon": "text BRAKE",
+    "programmer": "Orange5",
+    "checksum": "not confirmed yet"
+  },
+  "status": "USER_STATED_RULE_NOT_YET_VALIDATED_ON_BENCH"
+}

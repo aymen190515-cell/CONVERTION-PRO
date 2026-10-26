@@ -46,6 +46,53 @@
       ]
     },
     {
+      "key": "lincoln",
+      "label": "Lincoln",
+      "vehicles": [
+        {
+          "key": "lincoln_mkc_2017",
+          "label": "MKC 2017",
+          "file_label": "Lincoln MKC 2017",
+          "profile_path": "vehicles/lincoln/mkc_2017/profile.json",
+          "conversion": {
+            "type": "REGION",
+            "default_source": "MI",
+            "default_target": "KM"
+          },
+          "hardware": {
+            "physical_workflow_enabled": false,
+            "status": "USER_STATED_RULE",
+            "programmer": "Orange5",
+            "identification_adapter": "VLINKER-FS-USB"
+          },
+          "connection_guide": {
+            "eyebrow": "LINCOLN · MKC 2017",
+            "cluster_lines": [
+              "LINCOLN",
+              "MKC"
+            ],
+            "method": "Bench",
+            "cable": "VLINKER-FS-USB + Orange5",
+            "supply": "12.0 V",
+            "power_state": "OFF",
+            "steps": [
+              "Bench power: pin 5 = ground, pin 21 = +12V.",
+              "CAN: pin 25 = HS3 CAN+, pin 26 = HS3 CAN-.",
+              "Identify with vLinker (F110), convert 24C32 with Orange5.",
+              "Keep cluster power OFF until verification."
+            ],
+            "proceed_enabled": false,
+            "blocked_reason": "ORANGE5_WRITE_NOT_AUTOMATED"
+          },
+          "cluster_profile": {
+            "id": "lincoln_mkc_2017",
+            "exact_identity_confirmed": false,
+            "simulation_driver": null
+          }
+        }
+      ]
+    },
+    {
       "key": "toyota",
       "label": "Toyota",
       "vehicles": [
